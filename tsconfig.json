@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "strictNullChecks": false,
+    "paths": {
+      "@const/*": ["./helpers/const/*"],
+      "@fixtures/*": ["./fixtures/*"],
+      "@models/*": ["./helpers/models/*"],
+      "@pages/*": ["./pages/*"],
+      "@utils/*": ["./helpers/utils/*"]
+    }
+  }
+}
