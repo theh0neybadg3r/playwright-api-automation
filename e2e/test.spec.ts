@@ -1,71 +1,69 @@
-import { test, expect, request as playwrightRequest } from '@playwright/test'
-import { ApiResponseData } from "@models/types";
-import { referenceId, calculateSK, apiResultLogger } from "@utils/general";
-import { ALL_PAYMENT_METHODS } from "@const/solutions";
-import { HEADERS, BODY_CUSTOMER, BODY_DETAILS_PARAMS, ERROR_KEYWORDS } from "@const/constant-var";
-import { CHECKOUT_PAGE_CHECKER, CHECKOUT_URL_CHECKER, NO_ERROR_RESPONSE_CHECKER, scanPageForErrors, STATUS_CODE_CHECKER, SUCCESS_FLAG_CHECKER } from '@models/result-checker';
+/* eslint-disable playwright/expect-expect */
+/* eslint-disable playwright/no-skipped-test */
+import { test, expect } from '@playwright/test'
+import { apiResultLogger } from "@utils/general";
+import { CASH_PAYMENT_SOLUTIONS } from "@const/solutions";
+import { ERROR_KEYWORDS } from "@const/constant-var";
+import { CHECKOUT_PAGE_CHECKER, scanPageForErrors } from '@models/result-checker';
 import { VENDOR, SHEET_NAME } from '@const/enums';
+import { DepositIntentRequest, DepositInterface } from '@models/deposit-intent';
+import { runCheckoutUrlChecker, runNoErrorChecker, runStatusCodeChecker, runSuccessFlagChecker } from '@models/api-deposit-checkers';
 
-const cash_Payment_Solutions = Object.entries(ALL_PAYMENT_METHODS.CASH_PAYMENT);
+test.describe('PALAWAN DEPOSIT WORKFLOW', () => {
 
-const [solutionName, solutionConfig] = cash_Payment_Solutions
+    let palawanSolution: DepositInterface;
 
-const apiURL = process.env.API_URL!;
-        console.log(apiURL);
-        const publicKey = process.env.pubKey!;
-        const secretKey = process.env.secretKey!;
+    test.beforeAll(async () => {
+        palawanSolution = await DepositIntentRequest(CASH_PAYMENT_SOLUTIONS.Palawan)
+    });
 
-        let checkoutUrl: string;
-        let apiResponseData: ApiResponseData;
-        let apiResponseTime: number;
-        let calcSK: string;
-        let refId: string;
+    test.describe('API AND CHECKOUT PAGE VALIDATION', () => {
 
-        test.beforeAll(async () => {
+        test('should have valid status code', async () =>
+            await runStatusCodeChecker(palawanSolution, 'Palawan', VENDOR.UPAY, SHEET_NAME.CASH_PAYMENT));
 
-            // Validate environment variables
-            expect(apiURL, 'API_URL should be defined').toBeTruthy();
-            expect(publicKey, 'pubKey should be defined').toBeTruthy();
-            expect(secretKey, 'secretKey should be defined').toBeTruthy();
+        test('should have no error message in response', async () =>
+            await runNoErrorChecker(palawanSolution, 'Palawan', VENDOR.UPAY, SHEET_NAME.CASH_PAYMENT));
 
-            refId = referenceId();
-            calcSK = calculateSK(publicKey, secretKey, refId);
+        test('should have a success flag true', async () =>
+            await runSuccessFlagChecker(palawanSolution, 'Palawan', VENDOR.UPAY, SHEET_NAME.CASH_PAYMENT));
 
-            console.log('Generated Reference Number:', refId);
-            console.log('Calculated Secret Key:', calcSK);
+        test('should have a valid Checkout URL', async () =>
+            await runCheckoutUrlChecker(palawanSolution, 'Palawan', VENDOR.UPAY, SHEET_NAME.CASH_PAYMENT));
 
-            const apiContext = await playwrightRequest.newContext();
+        test('should load checkout page without errors', async ({ page }) => {
 
-            try {
-                const startTime = Date.now();
+            test.skip(!palawanSolution.checkoutUrl, 'No checkout URL available');
 
-                const response = await apiContext.post(`${apiURL}/deposit/intent`, {
-                    headers: HEADERS(refId),
-                    data: {
-                        customer: BODY_CUSTOMER,
-                        details: BODY_DETAILS_PARAMS({ referenceID: refId, methodSolution: solutionConfig })
-                    },
-                    failOnStatusCode: false
-                });
+            const startTime = Date.now();
 
-                apiResponseTime = Date.now() - startTime;
-
-                const body = await response.json() as typeof apiResponseData.body;
-
-                console.log('Status:', response.status());
-                console.log('Body:', JSON.stringify(body, null, 2));
-
-                apiResponseData = {
-                    status: response.status(),
-                    body
-                };
-
-                if (body?.data?.checkout_url) {
-                    checkoutUrl = body.data.checkout_url;
-                    console.log('Checkout URL saved:', checkoutUrl);
+            page.on('pageerror', (err) => {
+                if (
+                    err.message.includes('Blocked a frame with origin') ||
+                    err.message.includes('cross-origin frame')
+                ) {
+                    console.log('Suppressed cross-origin frame error:', err.message);
                 }
+            });
 
-            } finally {
-                await apiContext.dispose();
+            await page.goto(palawanSolution.checkoutUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+            console.log('Redirected to:', page.url());
+            await page.locator('body').waitFor({ state: 'visible', timeout: 10000 });
+
+            const foundErrorsInCheckoutPage = await scanPageForErrors(page, ERROR_KEYWORDS);
+            const pageLoadTime = Date.now() - startTime;
+
+            // eslint-disable-next-line playwright/no-conditional-in-test
+            if (foundErrorsInCheckoutPage.length > 0) {
+                console.log('✒️ Error keywords found:', foundErrorsInCheckoutPage.join(', '));
+                await page.screenshot({ path: `Palawan-checkout-error.png`});
             }
+
+            const checkoutPageLoadResult = CHECKOUT_PAGE_CHECKER(foundErrorsInCheckoutPage, pageLoadTime, palawanSolution.checkoutUrl, 'Palawan', VENDOR.UPAY, SHEET_NAME.CASH_PAYMENT);
+
+            console.log('📤 Logging test result:', JSON.stringify(checkoutPageLoadResult));
+            await apiResultLogger(checkoutPageLoadResult);
+            expect(checkoutPageLoadResult.status).toBe('PASSED');
         });
+    });
+});
