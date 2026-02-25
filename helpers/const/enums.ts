@@ -13,7 +13,7 @@ export enum VENDOR {
     HUBPAY = 'HubPay',
     PLYNXPAY = 'PlynxPay',
     COINSPH = 'CoinsPH',
-    QCONNECTSMART = 'QonnectSmart',
+    QONNECTSMART = 'QonnectSmart',
     REBANQXPAY = 'RebanqxPay',
     SCHUBIKPAY = 'SchubikPay',
     AMB_PAY = 'AMB-Pay',

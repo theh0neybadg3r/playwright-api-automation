@@ -10,3 +10,6 @@ node_modules/
 config/
 .env*
 !.env.example
+
+#test
+e2e/test.spec.ts

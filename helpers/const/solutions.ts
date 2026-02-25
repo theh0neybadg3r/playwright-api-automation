@@ -5,6 +5,41 @@ export const E_WALLET_SOLUTIONS = {
         solution: 'gcash',
         currency: 'PHP',
         amount: 100
+    }, 
+
+    EPO_Wallet: {
+        method: 'e_wallet',
+        solution: 'epo_wallet',
+        currency: 'PHP',
+        amount: 100
+    }, 
+
+    Paymaya: {
+        method: 'e_wallet',
+        solution: 'paymaya',
+        currency: 'PHP',
+        amount: 200
+    },
+
+    GrabPay: {
+        method: 'e_wallet',
+        solution: 'grabpay',
+        currency: 'PHP',
+        amount: 110
+    },
+
+    bKash: {
+        method: 'e_wallet',
+        solution: 'bkash',
+        currency: 'BDT',
+        amount: 10000
+    },
+
+    Nagad: {
+        method: 'e_wallet',
+        solution: 'nagad',
+        currency: 'BDT',
+        amount: 10000
     }
 } as const;
 
