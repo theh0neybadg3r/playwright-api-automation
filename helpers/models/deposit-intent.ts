@@ -2,7 +2,7 @@ import { expect, request as playwrightRequest } from '@playwright/test';
 import { ApiResponseData } from './types';
 import { referenceId, calculateSK } from '@utils/general';
 import { PAYMENT_SOLUTIONS } from '@const/solutions';
-import { HEADERS, BODY_CUSTOMER, BODY_DETAILS_PARAMS } from '@const/constant-var';
+import { HEADERS, BODY_CUSTOMER, BODY_DETAILS_PARAMS, ApiOverrides } from '@const/constant-var';
 
 export interface DepositInterface {
     checkoutUrl: string;
@@ -12,20 +12,28 @@ export interface DepositInterface {
     calcSK: string;
 }
 
+export interface DepositIntentOptions{
+    solutionConfig: PAYMENT_SOLUTIONS;
+    apiKeys?: ApiOverrides;
+}
+
 const apiURL = process.env.API_URL!;
 console.log(apiURL);
-const publicKey = process.env.pubKey!;
-const secretKey = process.env.secretKey!;
+// const publicKey = process.env.API_PUB_KEY_DEFAULT!;
+// const secretKey = process.env.API_SECRET_KEY_DEFAULT!;
 
-export async function DepositIntentRequest(solutionConfig: PAYMENT_SOLUTIONS): Promise<DepositInterface> {
+export async function DepositIntentRequest({ solutionConfig, apiKeys }: DepositIntentOptions): Promise<DepositInterface> {
 
     // Validate environment variables
     expect(apiURL, 'API_URL should be defined').toBeTruthy();
-    expect(publicKey, 'pubKey should be defined').toBeTruthy();
-    expect(secretKey, 'secretKey should be defined').toBeTruthy();
+    expect(apiKeys.publicKey, 'pubKey should be defined').toBeTruthy();
+    expect(apiKeys.secretKey, 'secretKey should be defined').toBeTruthy();
+
+    console.log(apiKeys.publicKey);
+    console.log(apiKeys.secretKey);
 
     const refId = referenceId();
-    const calcSK = calculateSK(publicKey, secretKey, refId);
+    const calcSK = calculateSK(apiKeys.publicKey, apiKeys.secretKey, refId);
 
     console.log('Generated Reference Number:', refId);
     console.log('Calculated Secret Key:', calcSK);
@@ -40,7 +48,7 @@ export async function DepositIntentRequest(solutionConfig: PAYMENT_SOLUTIONS): P
         const startTime = Date.now();
 
         const response = await apiContext.post(`${apiURL}/deposit/intent`, {
-            headers: HEADERS(refId),
+            headers: HEADERS(refId, apiKeys),
             data: {
                 customer: BODY_CUSTOMER,
                 details: BODY_DETAILS_PARAMS({ referenceID: refId, methodSolution: solutionConfig })

@@ -4,8 +4,15 @@ export const E_WALLET_SOLUTIONS = {
         method: 'e_wallet',
         solution: 'gcash',
         currency: 'PHP',
-        amount: 100
+        amount: 200
     }, 
+
+    Gcash: {
+        method: 'e_wallet',
+        solution: 'gcash',
+        currency: 'PHP',
+        amount: 200
+    },
 
     EPO_Wallet: {
         method: 'e_wallet',
@@ -13,6 +20,13 @@ export const E_WALLET_SOLUTIONS = {
         currency: 'PHP',
         amount: 100
     }, 
+
+    Oriental_Wallet: {
+        method: 'e_wallet',
+        solution: 'oriental_wallet',
+        currency: 'PHP',
+        amount: 100
+    },
 
     Paymaya: {
         method: 'e_wallet',
@@ -40,7 +54,14 @@ export const E_WALLET_SOLUTIONS = {
         solution: 'nagad',
         currency: 'BDT',
         amount: 10000
+    },
+
+    Dana: {
+        method: 'e_wallet',
+        currency: 'IDR',
+        amount: 20000
     }
+    
 } as const;
 
 export const ONLINE_BANKING_SOLUTION = {

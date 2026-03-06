@@ -78,10 +78,12 @@ export const ERROR_INDICATORS = [
     'not available'
 ];
 
-export const HEADERS = (refId: string) => {
+export interface ApiOverrides {
+    publicKey?: string;
+    secretKey?: string;
+}
 
-    const publicKey = process.env.pubKey;
-    const secretKey = process.env.secretKey;
+export const HEADERS = (refId: string, apiKeys?: ApiOverrides) => {
 
     return {
         'Content-Type': 'application/json',
@@ -89,7 +91,7 @@ export const HEADERS = (refId: string) => {
         'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive',
         'Accept': 'application/json',
-        'X-GATEWAY-KEY': publicKey,
-        'X-GATEWAY-SECRET': calculateSK(publicKey, secretKey, refId)
+        'X-GATEWAY-KEY': apiKeys.publicKey,
+        'X-GATEWAY-SECRET': calculateSK(apiKeys.publicKey, apiKeys.secretKey, refId)
     };
 }

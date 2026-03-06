@@ -71,6 +71,7 @@ export const apiResultLogger = async (result: TestResult, _page?: Page): Promise
         const response = await apiContext.post(GSheetURL, {
             data: mappingResult,
             failOnStatusCode: false,
+            timeout: 10000
         });
 
         const status = response.status();
