@@ -13,3 +13,6 @@ config/
 
 #test
 e2e/test.spec.ts
+
+#unnecessaries (for future use)
+code.md

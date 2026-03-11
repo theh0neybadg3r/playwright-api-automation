@@ -1,3 +1,4 @@
+/* eslint-disable playwright/no-networkidle */
 /* eslint-disable playwright/no-wait-for-selector */
 import { Page } from '@playwright/test';
 import { TestResult, ApiResponseData } from './types';
@@ -117,6 +118,11 @@ export function CHECKOUT_PAGE_CHECKER(
     };
 }
 
+export interface RedirectScanResult {
+    errors: string[];
+    sourceUrl: string;
+}
+
 export async function scanPageForErrors(page: Page, errorKeywords: string[]): Promise<string[]> {
 
     try {
@@ -152,9 +158,134 @@ export async function scanPageForErrors(page: Page, errorKeywords: string[]): Pr
     
 }
 
+async function scanBodyPageErrors (page: Page, errorKeywords: string[]): Promise<string[]> {
+
+    try {
+        const textInBody = await page.evaluate(() => document.body?.innerText?.toLowerCase() ?? '');
+        if (!textInBody.trim()) return [];
+        return errorKeywords.filter(keyword => textInBody.includes(keyword.toLowerCase()));
+    } catch (error) {
+        console.log('scanBodyPageErrors failed:', error.message);
+        return[];
+    }
+}
+
+async function handleCountdown(page: Page): Promise<void> {
+
+    const countdownKeywords = ['redirecting', 'redirect', 'seconds', 'one-time password', 'otp'];
+    const detectTimeout = 5000;
+    const dismissTimeoutMs = 30000; 
+
+    try {
+
+        await page.waitForFunction(
+            (keywords: string[]) => {
+
+                const dialogs = document.querySelectorAll('dialog, [role="dialog"], [role="alertdialog"]');
+
+                return Array.from(dialogs).some(el => {
+
+                    const style = window.getComputedStyle(el);
+                    const rect = el.getBoundingClientRect();
+
+                    const visible = 
+                        style.display !== 'none' &&
+                        style.visibility  !== 'hidden' &&
+                        style.opacity     !== '0'      &&
+                        rect.width  > 0                &&
+                        rect.height > 0;
+                    
+                    if (!visible) return false;
+
+                    const text = (el.textContent ?? '').toLowerCase();
+
+                    return keywords.some(k => text.includes(k));
+                });
+            },
+
+            countdownKeywords, { timeout: detectTimeout }
+        );
+
+        const modalText = await page.evaluate(() => {
+
+            const dialogs = document.querySelectorAll('dialog, [role="dialog"], [role="alertdialog"]');
+
+            return Array.from(dialogs)
+                .map(el => (el.textContent ?? '').trim())
+                .filter(Boolean)
+                .join(' | ');
+        });
+
+        console.log(`⏱️ Countdown redirect modal detected: "${modalText}`);
+        console.log('⏱️ Waiting for modal to auto-dismiss before scanning redirect chain....');
+
+        await page.waitForFunction(
+            (keywords: string[]) => {
+                const dialogs = document.querySelectorAll('dialog, [role="dialog"], [role="alertdialog"]');
+                const stillVisible = Array.from(dialogs).some(el => {
+                    const style = window.getComputedStyle(el);
+                    const rect  = el.getBoundingClientRect();
+                    const visible =
+                        style.display     !== 'none'   &&
+                        style.visibility  !== 'hidden' &&
+                        style.opacity     !== '0'      &&
+                        rect.width  > 0                &&
+                        rect.height > 0;
+                    if (!visible) return false;
+                    const text = (el.textContent ?? '').toLowerCase();
+                    return keywords.some(k => text.includes(k));
+                });
+                return !stillVisible;
+            },
+            countdownKeywords, { timeout: dismissTimeoutMs }
+        );
+
+        console.log('✅ Countdown modal dismissed. Proceeding with redirect chain scan.');
+
+    } catch {
+
+        console.log('🙅‍♂️ No countdown modal detected. Proceeding to normal scan...');
+    }
+}
+
+async function waitForButtonAndClick(page: Page, buttonSelectors: string[]): Promise<{ clicked: boolean; buttonText: string }> {
+
+    for (const buttonSelector of buttonSelectors) {
+
+        try {
+            await page.waitForSelector(buttonSelector, { state: 'visible', timeout: 15000 });
+
+            const button = page.locator(buttonSelector).first();
+            const isVisible = await button.isVisible().catch(() => false);
+
+            if (!isVisible) continue;
+
+            const buttonText = await button.innerText()
+                .catch(() => button.getAttribute('value'))
+                .catch(() => 'N/A') as string;
+
+            console.log(`Found button with selector: ${buttonSelector} | Text: "${buttonText}"`);
+            await button.click();
+            console.log('🐭 Button clicked');
+
+            return { clicked: true, buttonText };
+
+        } catch {
+            continue;
+        }
+    }
+
+    return { clicked: false, buttonText: '' };
+}
+
 export async function checkoutInteraction(page: Page, errorKeywords: string[]): Promise<{ initialErrors: string[]; postInteractionErrors: string[]; interacted: boolean }> {
 
+    const redirectScanPromise = scanForRedirectedPages(page, errorKeywords);
+
+    // STEP 2 — Scan the initial checkout page for visible dialog errors
     const initialErrors = await scanPageForErrors(page, errorKeywords);
+
+    // STEP 3 — Checkbox interaction
 
     const checkboxSelectors = [
         'input[type="checkbox"]',
@@ -183,17 +314,32 @@ export async function checkoutInteraction(page: Page, errorKeywords: string[]): 
     }
 
     if (!interacted) {
-        console.log('❌ No checkbox found on checkout page');
-        return { initialErrors, postInteractionErrors: [], interacted: false };
+        console.log('❌ No checkbox found on checkout page - checking for direct proceed button...');
+        // Drain the redirect scan promise so it doesn't leak
+        // void redirectScanPromise;
+        // return { initialErrors, postInteractionErrors: [], interacted: false };
     }
 
-    try {
+    if (interacted) {
+        try {
+            await page.waitForLoadState('networkidle', { timeout: 15000 });
+            console.log('✅ Network idle after checkbox toggle. Button should be ready.');
+        } catch {
+            console.log('🚫 networkidle timeout after checkbox - proceeding anyway');
+        }
 
-        await page.waitForLoadState('domcontentloaded', { timeout: 15000});
-        console.log('✅ Content loaded after checkbox toggle.')
-    } catch {
-        console.log('Load state timeout - proceeding anyway');
     }
+
+    // try {
+    //     await page.waitForLoadState('networkidle', { timeout: 15000 });
+    //     console.log('✅ Network idle after checkbox toggle. Button should be ready.');
+    // } catch {
+    //     console.log('🚫 networkidle timeout after checkbox - proceeding anyway');
+    // }
+
+    // STEP 4 — Find and click the submit/proceed button ONCE on the current page only.
+    // waitForButtonAndClick does NOT loop across redirects — it only acts on
+    // the initial checkout page where the button should be present after checkbox toggle.
 
     const buttonSelectors = [
         'button[type="submit"]',
@@ -205,112 +351,137 @@ export async function checkoutInteraction(page: Page, errorKeywords: string[]): 
         '[class*="confirm"]',
         '[class*="continue"]',
         '[class*="next"]',
+        '[class*="return"]',
         '[data-testid*="submit"]',
         '[data-testid*="proceed"]',
     ];
 
-    let buttonClicked = false;
-    let redirectedSucceeded = false;
-
-    for(const buttonSelector of buttonSelectors) {
-
-        try {
-            await page.waitForSelector(buttonSelector, { state: 'visible', timeout: 15000});
-
-            const button = page.locator(buttonSelector).first();
-            const isVisible = await button.isVisible().catch(() => false);
-
-            if (isVisible) {
-
-                const btnText = await button.innerText().catch(() => button.getAttribute('value').catch(() => 'N/A'));
-                console.log(`Found button with selector: ${buttonSelector} | Text: "${btnText}`);
-
-                const currentUrl = page.url();
-
-                try {
-                    await Promise.all([
-                        page.waitForURL(url => url.href !== currentUrl, { waitUntil: 'load', timeout: 15000 }),
-                        button.click()
-                    ]);
-
-                    console.log('🐭 Button clicked and redirected to:', page.url());
-                    redirectedSucceeded = true;
-                } catch {
-                    console.log('❌ No redirect after button click - navigation may have failed');
-                    redirectedSucceeded = false;
-                }
-
-                buttonClicked = true;
-                break;
-
-
-            }
-        } catch{
-            continue;
-        }
-    }
+    const { clicked: buttonClicked } = await waitForButtonAndClick(page, buttonSelectors);
 
     if (!buttonClicked) {
         console.log('❌ No proceed/submit button found on checkout page.');
+        void redirectScanPromise;
         return { initialErrors, postInteractionErrors: ['Proceed button not found after checkbox toggle'], interacted };
     }
 
-    if (!redirectedSucceeded) {
-        console.log('➡️ Button was found but redirect failed');
-        return { initialErrors, postInteractionErrors: ['Button clicked but redirect did not occur'], interacted };
-    }
+    await handleCountdown(page);
 
-    const postInteractionErrors = await scanForRedirectedPages(page, errorKeywords);
+    // STEP 5 — Wait for the redirect chain scanner to complete.
+    // It will scan every page the browser lands on after the button click,
+    // including intermediate error pages, and return errors per page.
+    console.log('⏳ Scanning redirect chain for errors...');
+    const redirectResults = await redirectScanPromise;
+
+    const postInteractionErrors = Array.from(
+        new Set(
+            redirectResults.flatMap(result => {
+                if (result.errors.length > 0) {
+                    console.log(`⚠️ Errors sourced from [${result.sourceUrl}]:`, result.errors);
+                }
+                return result.errors;
+            })
+        )
+    );
+
+    if (postInteractionErrors.length === 0) {
+        console.log('✅ No errors found across entire redirect chain.');
+    }
 
     return { initialErrors, postInteractionErrors, interacted };
+
 }
 
-export async function scanForRedirectedPages(page: Page, errorKeywords: string[]): Promise<string[]> {
+export async function scanForRedirectedPages(page: Page, 
+    errorKeywords: string[], 
+    options: { maxHops?: number; hopTimeoutMs?: number; settleTimeoutMs?: number } = {} 
+): Promise<RedirectScanResult[]> {
 
-    try {
-        let prevUrl = '';
-        let currUrl = page.url();
-        let maxRedirects = 10;
+    const {
+        maxHops = 10,
+        hopTimeoutMs = 10000,
+        settleTimeoutMs = 10000,
+    } = options;
 
-        while (prevUrl !== currUrl && maxRedirects > 0) {
+    const results: RedirectScanResult[] = [];
+    let hopCount = 0;
+    let done = false;
+    let idleTimer: ReturnType<typeof setTimeout>;
 
-            prevUrl = currUrl;
+    return new Promise((resolve) => {
+
+        const cleanup = () => {
+            if (done) return;
+            done = true;
+            clearTimeout(idleTimer);
+            page.off('framenavigated', wrappedNavigation);
+        };
+
+        const finalize = () => {
+            cleanup();
+            resolve(results);
+        };
+
+        const resetIdleTimer = () => {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => {
+                console.log('✅ No further redirects detected. Redirect chain complete.');
+                finalize();
+            }, hopTimeoutMs);
+        };
+
+        const onNavigation = async (frame: { url: () => string; parentFrame: () => unknown }) => {
+
+            // Only track the main frame, not iframes
+            if (frame.parentFrame() !== null) return;
+            if (done) return;
+
+            const landedUrl = frame.url();
+
+            // Skip browser internals
+            if (!landedUrl || landedUrl === 'about:blank') return;
+
+            hopCount++;
+            console.log(`🔀 Redirect hop ${hopCount}: ${landedUrl}`);
 
             try {
-                await page.waitForURL(url => url.href !== prevUrl, {
-                    waitUntil: 'load',
-                    timeout: 10000
-                });
+                await page.waitForLoadState('domcontentloaded', { timeout: settleTimeoutMs });
 
-                currUrl = page.url();
-                console.log(`♿ Redirect detected, now at: ${currUrl}`);
-                maxRedirects--;
-            } catch {
-                console.log(`✅ Final page reached: ${currUrl}`);
-                break;
+                const matched = await scanBodyPageErrors(page, errorKeywords);
+
+                if (matched.length > 0) {
+                    console.log(`❌ Error keyword(s) found on [${landedUrl}]:`, matched);
+                    results.push({ errors: matched, sourceUrl: landedUrl });
+                } else {
+                    console.log(`✅ No errors detected on [${landedUrl}]`);
+                }
+
+            } catch (err) {
+                console.warn(`⚠️ Could not scan page [${landedUrl}]:`, err.message);
             }
-        }
-        
-        await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
 
-        const bodyTextInPage = await page.evaluate(() => { return document.body?.innerText?.toLowerCase() ?? '';});
+            if (hopCount >= maxHops) {
+                console.log(`🛑 Max redirect hops (${maxHops}) reached. Stopping scan.`);
+                finalize();
+                return;
+            }
 
-        if (!bodyTextInPage.trim()) return [];
+            resetIdleTimer();
+        };
 
-        const errorsFoundInPage = errorKeywords.filter(keyword => bodyTextInPage.includes(keyword.toLowerCase()));
+        // wrappedNavigation resets the idle timer synchronously on each hop
+        // so the timer never fires mid-scan while onNavigation is still awaiting
+        const wrappedNavigation = (frame: { url: () => string; parentFrame: () => unknown }) => {
+            resetIdleTimer();
+            void onNavigation(frame);
+        };
 
-        if (errorsFoundInPage.length > 0) {
-            console.log('🤦‍♀️ Errors found on final page:', errorsFoundInPage.join(', '));
-        }
+        page.on('framenavigated', wrappedNavigation);
 
-        return errorsFoundInPage;
-        
-    } catch (error) {
-        console.log('scanForRedirectPages failed:', error.message);
-        return [];
-    }
+        // Initial idle timer — resolves if button click triggers no navigation at all
+        resetIdleTimer();
+    });
+
 }
-
 
 export function CHECKOUT_INTERACTION_CHECKER(
     initialErrors: string[],
@@ -346,70 +517,3 @@ export function CHECKOUT_INTERACTION_CHECKER(
     };
 }
 
-
-// const button = page.locator(buttonSelector).first();
-        // const isVisible = await button.isVisible().catch(() => false);
-
-        // if (isVisible) {
-        //     console.log(`Found button with selector: ${buttonSelector}`);
-
-        //     const currentUrl = page.url();
-
-        //     // await button.click();
-            
-        //     try {
-        //         await Promise.race([
-        //             page.waitForURL(url => url.href !== currentUrl, { waitUntil: 'load', timeout: 15000 }),
-        //             button.click(),
-        //             // page.waitForLoadState('domcontentloaded', { timeout: 15000 }),
-        //         ]);
-        //         console.log('Redirected to:', page.url()); 
-        //     } catch {
-        //         console.log('🙅‍♂️ No redirect detected after button click, scanning current page...');
-        //     }
-
-        //     buttonClicked = true;
-        //     break;
-        // }
-
-// console.log(`✅ Found button with selector: ${buttonSelector}`);
-                // const currentUrl = page.url();
-
-                // await Promise.all([
-                //     page.waitForURL(url => url.href !== currentUrl, { waitUntil: 'load', timeout: 15000 }),
-                //     button.click()
-                // ]);
-
-                // console.log('🐭 Button clicked and redirected to:', page.url());
-                // buttonClicked = true;
-                // break;
-
-// await page.waitForLoadState('networkidle', { timeout: 15000 });
-
-    // const onlyVisibleErrors = await page.evaluate(() => {
-    //     const dialogs = document.querySelectorAll('dialog, [role="dialog"], [role="alertdialog"]');
-    //     return Array.from(dialogs)
-    //         .filter(elements => {
-    //             const style = window.getComputedStyle(elements);
-    //             const rect = elements.getBoundingClientRect();
-    //             return (
-    //                 style.display !== 'none' &&
-    //                 style.visibility !== 'hidden' &&
-    //                 style.opacity !== '0' &&
-    //                 rect.width > 0 &&
-    //                 rect.height > 0
-    //             );
-    //         })
-    //         .map(elements => elements.textContent ?? '')
-    //         .join('')
-    //         .toLowerCase();
-    // });
-
-    // if (!onlyVisibleErrors.trim()) return [];
-    // return errorKeywords.filter((keyword) => onlyVisibleErrors.includes(keyword))
-
-     // await Promise.race([
-        //     page.waitForURL(url => url.href !== page.url(), { waitUntil: 'load', timeout: 15000 }),
-        //     page.waitForURL(/.*/, { timeout: 15000 }),
-        // ]);
-        // console.log('Page navigated after checkbox toggle, new URL:', page.url());

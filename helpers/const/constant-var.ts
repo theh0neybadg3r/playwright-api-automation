@@ -66,6 +66,8 @@ export const ERROR_KEYWORDS = [
     'an error was encountered during the transaction',
     'palawan pawnshop transaction limit is up to php 20,000.00',
     'otc transaction limit is up to php 50,000.00',
+    'Undefined array key "paymentUrl"',
+    'processing error'
 ];
 
 export const ERROR_INDICATORS = [

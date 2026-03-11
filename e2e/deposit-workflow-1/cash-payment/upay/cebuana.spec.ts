@@ -83,7 +83,7 @@ test.describe('CEBUANA DEPOSIT WORKFLOW', () => {
 
             if (initialErrors.length > 0 || postInteractionErrors.length > 0) {
                 console.log('Errors found - Initial:', initialErrors, '| Post-interaction:', postInteractionErrors);
-                await page.screenshot({ path: `Upay-Palawan-checkout-error.png` });
+                await page.screenshot({ path: `error-logs/cash-payment/upay/cebuana/cebuana-error.png` });
             }
 
             if (!interacted) {

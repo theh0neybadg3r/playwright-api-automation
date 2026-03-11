@@ -60,6 +60,21 @@ export const E_WALLET_SOLUTIONS = {
         method: 'e_wallet',
         currency: 'IDR',
         amount: 20000
+    },
+    LinkAja: {
+        method: 'e_wallet',
+        currency: 'IDR',
+        amount: 20000
+    },
+    OVO: {
+        method: 'e_wallet',
+        currency: 'IDR',
+        amount: 20000
+    },
+    ShopeePay: {
+        method: 'e_wallet',
+        currency: 'IDR',
+        amount: 20000
     }
     
 } as const;

@@ -10,18 +10,18 @@ import { DepositIntentRequest, DepositInterface } from '@models/deposit-intent';
 import { runCheckoutUrlChecker, runNoErrorChecker, runStatusCodeChecker, runSuccessFlagChecker } from '@models/api-deposit-checkers';
 import { paymentSelectionInteraction } from '@models/payment-selection';
 
-test.describe('DANA DEPOSIT WORKFLOW', () => {
+test.describe('OVO DEPOSIT WORKFLOW', () => {
 
     test.describe.configure({ mode: 'serial' });
 
-    let danaSolution: DepositInterface;
+    let ovoSolution: DepositInterface;
 
     test.beforeAll(async () => {
 
         // test.setTimeout(120000);
 
-        danaSolution = await DepositIntentRequest({ 
-            solutionConfig: E_WALLET_SOLUTIONS.Dana,
+        ovoSolution = await DepositIntentRequest({ 
+            solutionConfig: E_WALLET_SOLUTIONS.OVO,
             apiKeys: {
                 publicKey: process.env.API_PUB_KEY_DEFAULT!,
                 secretKey: process.env.API_SECRET_KEY_DEFAULT!
@@ -33,18 +33,18 @@ test.describe('DANA DEPOSIT WORKFLOW', () => {
 
         test.setTimeout(120000);
 
-        await runStatusCodeChecker(danaSolution, 'DANA', VENDOR.TOPPAY, SHEET_NAME.E_WALLET);
-        await runNoErrorChecker(danaSolution, 'DANA', VENDOR.TOPPAY, SHEET_NAME.E_WALLET);
-        await runSuccessFlagChecker(danaSolution, 'DANA', VENDOR.TOPPAY, SHEET_NAME.E_WALLET);
-        await runCheckoutUrlChecker(danaSolution, 'DANA', VENDOR.TOPPAY, SHEET_NAME.E_WALLET);
+        await runStatusCodeChecker(ovoSolution, 'OVO', VENDOR.TOPPAY, SHEET_NAME.E_WALLET);
+        await runNoErrorChecker(ovoSolution, 'OVO', VENDOR.TOPPAY, SHEET_NAME.E_WALLET);
+        await runSuccessFlagChecker(ovoSolution, 'OVO', VENDOR.TOPPAY, SHEET_NAME.E_WALLET);
+        await runCheckoutUrlChecker(ovoSolution, 'OVO', VENDOR.TOPPAY, SHEET_NAME.E_WALLET);
 
         //Checker for checking if the checkout page load without error.
-        if (!danaSolution?.checkoutUrl) {
+        if (!ovoSolution?.checkoutUrl) {
             const failedResult = CHECKOUT_PAGE_CHECKER(
                 ['No checkout URL available'], 
                 0,
                 null,
-                'DANA',
+                'OVO',
                 VENDOR.TOPPAY,
                 SHEET_NAME.E_WALLET
             );
@@ -72,11 +72,11 @@ test.describe('DANA DEPOSIT WORKFLOW', () => {
                 }
             });
 
-            await page.goto(danaSolution.checkoutUrl, { waitUntil: 'load', timeout: 80000 });
+            await page.goto(ovoSolution.checkoutUrl, { waitUntil: 'load', timeout: 80000 });
             console.log('Redirected to:', page.url());
             await page.locator('body').waitFor({ state: 'visible', timeout: 10000 });
 
-            const { initialErrors, postInteractionErrors, interacted } = await paymentSelectionInteraction(page, ERROR_KEYWORDS, { label: 'DANA', aliases: ['dana'] });
+            const { initialErrors, postInteractionErrors, interacted } = await paymentSelectionInteraction(page, ERROR_KEYWORDS, { label: 'OVO', aliases: ['ovo'] });
 
 
             //const foundErrorsInCheckoutPage = await scanPageForErrors(page, ERROR_KEYWORDS);
@@ -84,7 +84,7 @@ test.describe('DANA DEPOSIT WORKFLOW', () => {
 
             if (initialErrors.length > 0 || postInteractionErrors.length > 0) {
                 console.log('Errors found - Initial:', initialErrors, '| Post-interaction:', postInteractionErrors);
-                await page.screenshot({ path: `TopPay-checkout-error.png` });
+                await page.screenshot({ path: `error-logs/e-wallet/toppay/ovo/ovo-error.png` });
             }
 
             if (!interacted) {
@@ -96,8 +96,8 @@ test.describe('DANA DEPOSIT WORKFLOW', () => {
                 postInteractionErrors, 
                 interacted, 
                 pageLoadTime,
-                danaSolution.checkoutUrl,
-                'DANA',
+                ovoSolution.checkoutUrl,
+                'OVO',
                 VENDOR.TOPPAY,
                 SHEET_NAME.E_WALLET
             );
