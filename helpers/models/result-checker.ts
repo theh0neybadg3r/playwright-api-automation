@@ -250,10 +250,17 @@ async function handleCountdown(page: Page): Promise<void> {
 
 async function waitForButtonAndClick(page: Page, buttonSelectors: string[]): Promise<{ clicked: boolean; buttonText: string }> {
 
+    const combinedSelectors = buttonSelectors.join(', ');
+    const anyButtonsExists = await page.locator(combinedSelectors).first().isVisible().catch(() => false);
+
+    if(!anyButtonsExists) {
+        console.log('ℹ️ No actionable button found on current page - skipping button search ');
+        return { clicked: false, buttonText: ''};
+    }
     for (const buttonSelector of buttonSelectors) {
 
         try {
-            await page.waitForSelector(buttonSelector, { state: 'visible', timeout: 15000 });
+            await page.waitForSelector(buttonSelector, { state: 'visible', timeout: 4500 });
 
             const button = page.locator(buttonSelector).first();
             const isVisible = await button.isVisible().catch(() => false);
@@ -313,34 +320,6 @@ export async function checkoutInteraction(page: Page, errorKeywords: string[]): 
         }
     }
 
-    if (!interacted) {
-        console.log('❌ No checkbox found on checkout page - checking for direct proceed button...');
-        // Drain the redirect scan promise so it doesn't leak
-        // void redirectScanPromise;
-        // return { initialErrors, postInteractionErrors: [], interacted: false };
-    }
-
-    if (interacted) {
-        try {
-            await page.waitForLoadState('networkidle', { timeout: 15000 });
-            console.log('✅ Network idle after checkbox toggle. Button should be ready.');
-        } catch {
-            console.log('🚫 networkidle timeout after checkbox - proceeding anyway');
-        }
-
-    }
-
-    // try {
-    //     await page.waitForLoadState('networkidle', { timeout: 15000 });
-    //     console.log('✅ Network idle after checkbox toggle. Button should be ready.');
-    // } catch {
-    //     console.log('🚫 networkidle timeout after checkbox - proceeding anyway');
-    // }
-
-    // STEP 4 — Find and click the submit/proceed button ONCE on the current page only.
-    // waitForButtonAndClick does NOT loop across redirects — it only acts on
-    // the initial checkout page where the button should be present after checkbox toggle.
-
     const buttonSelectors = [
         'button[type="submit"]',
         'input[type="submit"]',
@@ -351,17 +330,89 @@ export async function checkoutInteraction(page: Page, errorKeywords: string[]): 
         '[class*="confirm"]',
         '[class*="continue"]',
         '[class*="next"]',
-        '[class*="return"]',
         '[data-testid*="submit"]',
         '[data-testid*="proceed"]',
     ];
 
+    if (!interacted) {
+        console.log('❌ No checkbox found on checkout page - scanning current page and checking for direct proceed button...');
+
+        const mainPageCheck = await scanBodyPageErrors(page, errorKeywords);
+
+        const { clicked: buttonClicked } = await waitForButtonAndClick(page, buttonSelectors);
+
+        if (!buttonClicked) {
+            console.log('ℹ️ No proceed/submit button found - Scanning for errors....');
+
+            void redirectScanPromise;
+
+            // const mainPageCheck = await scanBodyPageErrors(page, errorKeywords);
+
+            if (mainPageCheck.length > 0) {
+                console.log('❌ Errors found on main checkout page:', mainPageCheck);
+            }else {
+                console.log('✅ No errors found on main checkout page.');
+            }
+
+            return { initialErrors, postInteractionErrors: mainPageCheck, interacted };
+        }
+
+        await handleCountdown(page);
+
+        console.log('⏳ Scanning redirect chain for errors...');
+        const redirectResults = await redirectScanPromise;
+
+        const postInteractionErrors = Array.from(
+            new Set(
+                redirectResults.flatMap(result => {
+                    if (result.errors.length > 0) {
+                        console.log(`⚠️ Errors sourced from [${result.sourceUrl}]:`, result.errors);
+                    }
+                    return result.errors;
+                })
+            )
+        );
+
+        if (postInteractionErrors.length === 0) {
+            console.log('✅ No errors found across entire redirect chain.');
+        }
+
+        return { initialErrors, postInteractionErrors, interacted };
+        // Drain the redirect scan promise so it doesn't leak
+        // void redirectScanPromise;
+        // return { initialErrors, postInteractionErrors: [], interacted: false };
+    }
+
+    // if (interacted) {
+    //     try {
+    //         await page.waitForLoadState('networkidle', { timeout: 15000 });
+    //         console.log('✅ Network idle after checkbox toggle. Button should be ready.');
+    //     } catch {
+    //         console.log('🚫 networkidle timeout after checkbox - proceeding anyway');
+    //     }
+
+    // }
+
+    try {
+        await page.waitForLoadState('networkidle', { timeout: 15000 });
+        console.log('✅ Network idle after checkbox toggle. Button should be ready.');
+    } catch {
+        console.log('🚫 networkidle timeout after checkbox - proceeding anyway');
+    }
+
+    // STEP 4 — Find and click the submit/proceed button ONCE on the current page only.
+    // waitForButtonAndClick does NOT loop across redirects — it only acts on
+    // the initial checkout page where the button should be present after checkbox toggle.
+
+    
     const { clicked: buttonClicked } = await waitForButtonAndClick(page, buttonSelectors);
 
     if (!buttonClicked) {
-        console.log('❌ No proceed/submit button found on checkout page.');
+        console.log('ℹ️ No proceed/submit button found - Scanning for errors....');
+
         void redirectScanPromise;
-        return { initialErrors, postInteractionErrors: ['Proceed button not found after checkbox toggle'], interacted };
+
+        return { initialErrors, postInteractionErrors:  ['Proceed button not found after checkbox toggle'], interacted };
     }
 
     await handleCountdown(page);

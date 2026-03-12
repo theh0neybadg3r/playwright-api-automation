@@ -10,21 +10,21 @@ import { VENDOR, SHEET_NAME } from '@const/enums';
 import { DepositIntentRequest, DepositInterface } from '@models/deposit-intent';
 import { runCheckoutUrlChecker, runNoErrorChecker, runStatusCodeChecker, runSuccessFlagChecker } from '@models/api-deposit-checkers';
 
-test.describe('NAGAD DEPOSIT WORKFLOW', () => {
+test.describe('GCASH_S DEPOSIT WORKFLOW', () => {
 
     test.describe.configure({ mode: 'serial' });
 
-    let nagadSolution: DepositInterface;
+    let gcash_sSolution: DepositInterface;
 
     test.beforeAll(async () => {
 
         // test.setTimeout(120000);
 
-        nagadSolution = await DepositIntentRequest({ 
-            solutionConfig: E_WALLET_SOLUTIONS.Nagad,
+        gcash_sSolution = await DepositIntentRequest({ 
+            solutionConfig: E_WALLET_SOLUTIONS.Gcash_S,
             apiKeys: {
-                publicKey: process.env.API_PUB_KEY_DEFAULT!,
-                secretKey: process.env.API_SECRET_KEY_DEFAULT!
+                publicKey: process.env.API_PUB_KEY_1!,
+                secretKey: process.env.API_SECRET_KEY_1!
             }
         });
     });
@@ -33,19 +33,19 @@ test.describe('NAGAD DEPOSIT WORKFLOW', () => {
 
         test.setTimeout(120000);
 
-        await runStatusCodeChecker(nagadSolution, 'Nagad', VENDOR.QONNECTSMART, SHEET_NAME.E_WALLET);
-        await runNoErrorChecker(nagadSolution, 'Nagad', VENDOR.QONNECTSMART, SHEET_NAME.E_WALLET);
-        await runSuccessFlagChecker(nagadSolution, 'Nagad', VENDOR.QONNECTSMART, SHEET_NAME.E_WALLET);
-        await runCheckoutUrlChecker(nagadSolution, 'Nagad', VENDOR.QONNECTSMART, SHEET_NAME.E_WALLET);
+        await runStatusCodeChecker(gcash_sSolution, 'Gcash_S', VENDOR.ALLBANK, SHEET_NAME.E_WALLET);
+        await runNoErrorChecker(gcash_sSolution, 'Gcash_S', VENDOR.ALLBANK, SHEET_NAME.E_WALLET);
+        await runSuccessFlagChecker(gcash_sSolution, 'Gcash_S', VENDOR.ALLBANK, SHEET_NAME.E_WALLET);
+        await runCheckoutUrlChecker(gcash_sSolution, 'Gcash_S', VENDOR.ALLBANK, SHEET_NAME.E_WALLET);
 
         //Checker for checking if the checkout page load without error.
-        if (!nagadSolution?.checkoutUrl) {
+        if (!gcash_sSolution?.checkoutUrl) {
             const failedResult = CHECKOUT_PAGE_CHECKER(
                 ['No checkout URL available'], 
                 0,
                 null,
-                'Nagad',
-                VENDOR.QONNECTSMART,
+                'Gcash_S',
+                VENDOR.ALLBANK,
                 SHEET_NAME.E_WALLET
             );
 
@@ -72,7 +72,7 @@ test.describe('NAGAD DEPOSIT WORKFLOW', () => {
                 }
             });
 
-            await page.goto(nagadSolution.checkoutUrl, { waitUntil: 'networkidle', timeout: 80000 });
+            await page.goto(gcash_sSolution.checkoutUrl, { waitUntil: 'networkidle', timeout: 80000 });
             console.log('Redirected to:', page.url());
             await page.locator('body').waitFor({ state: 'visible', timeout: 10000 });
 
@@ -84,7 +84,7 @@ test.describe('NAGAD DEPOSIT WORKFLOW', () => {
 
             if (initialErrors.length > 0 || postInteractionErrors.length > 0) {
                 console.log('Errors found - Initial:', initialErrors, '| Post-interaction:', postInteractionErrors);
-                await page.screenshot({ path: `error-logs/e-wallet/qonnectsmart/bkash/bkash-error.png` });
+                await page.screenshot({ path: `error-logs/e-wallet/upay/gcash/upay-gcash-error.png` });
             }
 
             // if (!interacted) {
@@ -96,9 +96,9 @@ test.describe('NAGAD DEPOSIT WORKFLOW', () => {
                 postInteractionErrors, 
                 interacted, 
                 pageLoadTime,
-                nagadSolution.checkoutUrl,
-                'Nagad',
-                VENDOR.QONNECTSMART,
+                gcash_sSolution.checkoutUrl,
+                'Gcash_S',
+                VENDOR.ALLBANK,
                 SHEET_NAME.E_WALLET
             );
 
