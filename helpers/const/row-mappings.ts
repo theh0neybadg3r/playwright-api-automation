@@ -84,6 +84,20 @@ export const ROW_MAPPING: Record<string, Record<string, Record<string, number>>>
             "Checkout URL is present and valid": 62,
             "Checkout page load without errors": 63
         },
+        "QonnectSmart|Rocket": {
+            "Status code is 200 or 201": 64,
+            "No error message in response": 65,
+            "Success flag is true": 66,
+            "Checkout URL is present and valid": 67,
+            "Checkout page load without errors": 68
+        },
+        "QonnectSmart|Upay": {
+            "Status code is 200 or 201": 69,
+            "No error message in response": 70,
+            "Success flag is true": 71,
+            "Checkout URL is present and valid": 72,
+            "Checkout page load without errors": 73
+        },
         "EPO Wallet|EPO Wallet": {
             "Status code is 200 or 201": 64,
             "No error message in response": 65,
@@ -122,6 +136,71 @@ export const ROW_MAPPING: Record<string, Record<string, Record<string, number>>>
             "Success flag is true": 11,
             "Checkout URL is present and valid": 12,
             "Checkout page load without errors": 13
+        }
+    },
+    "Payment Provider": {
+        "CoinsPH|QRPH": {
+            "Status code is 200 or 201": 4,
+            "No error message in response": 5,
+            "Success flag is true": 6,
+            "Checkout URL is present and valid": 7,
+            "Checkout page load without errors": 8
+        },
+        "AllBank|QRPH": {
+            "Status code is 200 or 201": 9,
+            "No error message in response": 10,
+            "Success flag is true": 11,
+            "Checkout URL is present and valid": 12,
+            "Checkout page load without errors": 13
+        },
+        "PlynxPay|GoTyme": {
+            "Status code is 200 or 201": 14,
+            "No error message in response": 15,
+            "Success flag is true": 16,
+            "Checkout URL is present and valid": 17,
+            "Checkout page load without errors": 18
+        },
+        "TopPay|QRIS": {
+            "Status code is 200 or 201": 19,
+            "No error message in response": 20,
+            "Success flag is true": 21,
+            "Checkout URL is present and valid": 22,
+            "Checkout page load without errors": 23
+        },
+        "TopPay|QRPay": {
+            "Status code is 200 or 201": 24,
+            "No error message in response": 25,
+            "Success flag is true": 26,
+            "Checkout URL is present and valid": 27,
+            "Checkout page load without errors": 28
+        },
+        "Trinity|Duitnow QR": {
+            "Status code is 200 or 201": 29,
+            "No error message in response": 30,
+            "Success flag is true": 31,
+            "Checkout URL is present and valid": 32,
+            "Checkout page load without errors": 33
+        },
+        "Upay|Instapay": {
+            "Status code is 200 or 201": 34,
+            "No error message in response": 35,
+            "Success flag is true": 36,
+            "Checkout URL is present and valid": 37,
+            "Checkout page load without errors": 38
+        },
+        "Upay|Paygate": {
+            "Status code is 200 or 201": 39,
+            "No error message in response": 40,
+            "Success flag is true": 41,
+            "Checkout URL is present and valid": 42,
+            "Checkout page load without errors": 43
+        },
+        "AMB-Pay|Duitnow QR": {
+            "Status code is 200 or 201": 44,
+            "No error message in response": 45,
+            "Success flag is true": 46,
+            "Checkout URL is present and valid": 47,
+            "Checkout page load without errors": 48
         }
     }
 }

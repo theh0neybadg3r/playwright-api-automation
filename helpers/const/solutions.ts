@@ -56,6 +56,20 @@ export const E_WALLET_SOLUTIONS = {
         amount: 10000
     },
 
+    Rocket: {
+        method: 'e_wallet',
+        solution: 'rocket',
+        currency: 'BDT',
+        amount: 10000
+    },
+
+    Upay: {
+        method: 'e_wallet',
+        solution: 'upay',
+        currency: 'BDT',
+        amount: 10000
+    },
+
     Dana: {
         method: 'e_wallet',
         currency: 'IDR',
@@ -114,8 +128,36 @@ export const PAYMENT_PROVIDER_SOLUTIONS = {
         method: 'payment_provider',
         solution: 'qrph',
         currency: 'PHP',
+        amount: 200
+    }, 
+    GoTyme: {
+        method: "payment_provider", 
+        solution:"gotyme",
+        currency: "PHP", 
         amount: 100
-    }
+    }, 
+    Instapay: {
+        method: "payment_provider", 
+        solution: "instapay",
+        currency: "PHP", 
+        amount: 110
+    },
+    Paygate: {
+        method: "payment_provider", 
+        solution: "paygate",
+        currency: "PHP", 
+        amount: 110
+    },
+    QRIS: {
+        method: 'e_wallet',
+        currency: 'IDR',
+        amount: 20000
+    },
+    QRPay: {
+        method: 'e_wallet',
+        currency: 'IDR',
+        amount: 20000
+    },
 } as const;
 
 export const ALL_PAYMENT_METHODS = {

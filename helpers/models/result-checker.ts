@@ -170,6 +170,187 @@ async function scanBodyPageErrors (page: Page, errorKeywords: string[]): Promise
     }
 }
 
+export interface BankSelectionConfig {
+    loginOptionText: string;
+    paymentMethod?: string;
+    bankName: string;
+}
+
+async function handleBankSelection(page: Page, config: BankSelectionConfig): Promise<void> {
+
+    const { loginOptionText, paymentMethod, bankName } = config;
+
+    try {
+
+        // Wait for the payment selection container to render its children
+        try {
+            await page.waitForFunction(() => {
+                const container = document.querySelector('#payment-selection-home');
+                return container && container.children.length > 0;
+            }, { timeout: 15000 });
+        } catch {
+            console.log('⚠️ Payment selection container did not render — trying anyway');
+        }
+
+        // STEP 1 — Click the login/payment option
+        console.log(`👀 Looking for login option: "${loginOptionText}"...`);
+        let loginOptionClicked = false;
+
+        // Strategy A — href-based match for image-only payment option cards
+        // e.g. href="javascript:choosePayment('account')"
+        if (paymentMethod) {
+            try {
+                const hrefSelector = `a[href="javascript:choosePayment('${paymentMethod}')"]`;
+                await page.waitForSelector(hrefSelector, { state: 'visible', timeout: 5000 });
+                const option = page.locator(hrefSelector).first();
+                const isVisible = await option.isVisible().catch(() => false);
+                if (isVisible) {
+                    await option.click();
+                    console.log(`✅ Login option clicked via paymentMethod: "${paymentMethod}"`);
+                    loginOptionClicked = true;
+                }
+            } catch {
+                console.log(`⚠️ paymentMethod selector not found — falling back to text match`);
+            }
+        }
+
+        // Strategy B — text-based match for pages with visible text labels
+        if (!loginOptionClicked) {
+            const loginOptionSelectors = [
+                `text=${loginOptionText}`,
+                `a:has-text("${loginOptionText}")`,
+                `[class*="option"]:has-text("${loginOptionText}")`,
+                `label:has-text("${loginOptionText}")`,
+                `div:has-text("${loginOptionText}")`,
+                `li:has-text("${loginOptionText}")`,
+            ];
+
+            for (const selector of loginOptionSelectors) {
+                try {
+                    await page.waitForSelector(selector, { state: 'visible', timeout: 3000 });
+                    const option = page.locator(selector).first();
+                    const isVisible = await option.isVisible().catch(() => false);
+                    if (!isVisible) continue;
+                    await option.click();
+                    console.log(`✅ Login option selected via text: "${loginOptionText}"`);
+                    loginOptionClicked = true;
+                    break;
+                } catch {
+                    continue;
+                }
+            }
+        }
+
+        if (!loginOptionClicked) {
+            console.log(`⚠️ Login option "${loginOptionText}" not found — skipping bank selection`);
+            return;
+        }
+
+        // STEP 2 — Wait for bank dropdown and select the bank
+        console.log(`🏦 Looking for bank dropdown to select: "${bankName}"...`);
+
+        try {
+            await page.waitForLoadState('networkidle', { timeout: 10000 });
+        } catch {
+            console.log('⚠️ networkidle timeout after login option click — proceeding anyway');
+        }
+
+        let bankSelected = false;
+
+        const dropdownSelectors = [
+            'select',
+            '[role="listbox"]',
+            '[role="combobox"]',
+            '[class*="dropdown"]',
+            '[class*="select"]',
+        ];
+
+        for (const selector of dropdownSelectors) {
+            try {
+                await page.waitForSelector(selector, { state: 'visible', timeout: 5000 });
+                const dropdown = page.locator(selector).first();
+                const isVisible = await dropdown.isVisible().catch(() => false);
+                if (!isVisible) continue;
+
+                const tagName = await dropdown.evaluate(el => el.tagName.toLowerCase());
+
+                if (tagName === 'select') {
+                    await dropdown.selectOption({ label: bankName });
+                    console.log(`✅ Bank selected from native dropdown: "${bankName}"`);
+                    bankSelected = true;
+                    break;
+                } else {
+                    await dropdown.click();
+                    console.log(`🔽 Custom dropdown opened, looking for "${bankName}"...`);
+                    const bankOption = page.locator(
+                        `[role="option"]:has-text("${bankName}"), ` +
+                        `li:has-text("${bankName}"), ` +
+                        `div[class*="option"]:has-text("${bankName}")`
+                    ).first();
+                    await bankOption.waitFor({ state: 'visible', timeout: 5000 });
+                    await bankOption.click();
+                    console.log(`✅ Bank selected from custom dropdown: "${bankName}"`);
+                    bankSelected = true;
+                    break;
+                }
+            } catch {
+                continue;
+            }
+        }
+
+        if (!bankSelected) {
+            console.log(`⚠️ Could not select bank "${bankName}" — skipping`);
+            return;
+        }
+
+        // STEP 3 — Click Continue after bank selection
+        try {
+            await page.waitForLoadState('networkidle', { timeout: 10000 });
+        } catch {
+            console.log('⚠️ networkidle timeout after bank selection — proceeding anyway');
+        }
+
+        const continueSelectors = [
+            'button[type="submit"]',
+            'input[type="submit"]',
+            '[class*="continue"]',
+            '[class*="proceed"]',
+            '[class*="submit"]',
+            'button:has-text("Continue")',
+            'button:has-text("CONTINUE")',
+            'input[value="Continue"]',
+            'input[value="CONTINUE"]',
+        ];
+
+        let continueClicked = false;
+
+        for (const selector of continueSelectors) {
+            try {
+                await page.waitForSelector(selector, { state: 'visible', timeout: 5000 });
+                const btn = page.locator(selector).first();
+                const isVisible = await btn.isVisible().catch(() => false);
+                if (!isVisible) continue;
+                const btnText = await btn.innerText()
+                    .catch(() => btn.getAttribute('value'))
+                    .catch(() => 'N/A') as string;
+                await btn.click();
+                console.log(`✅ Continue button clicked: "${btnText}"`);
+                continueClicked = true;
+                break;
+            } catch {
+                continue;
+            }
+        }
+
+        if (!continueClicked) {
+            console.log('⚠️ Continue button not found after bank selection — proceeding anyway');
+        }
+
+    } catch (err) {
+        console.log('⚠️ handleBankSelection failed — proceeding anyway:', err.message);
+    }
+}
+
 async function handleCountdown(page: Page): Promise<void> {
 
     const countdownKeywords = ['redirecting', 'redirect', 'seconds', 'one-time password', 'otp'];
@@ -248,6 +429,89 @@ async function handleCountdown(page: Page): Promise<void> {
     }
 }
 
+async function handleConfirmationModal(page: Page): Promise<void> {
+
+    const confirmationKeywords = ['confirm payment', 'confirm', 'are you sure', 'proceed with'];
+    const detectTimeout = 5000;
+
+    try {
+
+        await page.waitForFunction(
+            (keywords: string[]) => {
+                const dialogs = document.querySelectorAll('dialog, [role="dialog"], [role="alertdialog"]');
+                return Array.from(dialogs).some(el => {
+                    const style = window.getComputedStyle(el);
+                    const rect  = el.getBoundingClientRect();
+                    const visible =
+                        style.display    !== 'none'   &&
+                        style.visibility !== 'hidden' &&
+                        style.opacity    !== '0'      &&
+                        rect.width  > 0               &&
+                        rect.height > 0;
+                    if (!visible) return false;
+                    const text = (el.textContent ?? '').toLowerCase();
+                    return keywords.some(k => text.includes(k));
+                });
+            },
+            confirmationKeywords,
+            { timeout: detectTimeout }
+        );
+
+        // Get only the VISIBLE dialog — not all dialogs joined together
+        const modalText = await page.evaluate(() => {
+            const dialogs = document.querySelectorAll('dialog, [role="dialog"], [role="alertdialog"]');
+            return Array.from(dialogs)
+                .filter(el => {
+                    const style = window.getComputedStyle(el);
+                    const rect  = el.getBoundingClientRect();
+                    return (
+                        style.display    !== 'none'   &&
+                        style.visibility !== 'hidden' &&
+                        style.opacity    !== '0'      &&
+                        rect.width  > 0               &&
+                        rect.height > 0
+                    );
+                })
+                .map(el => (el.textContent ?? '').trim())
+                .filter(Boolean)
+                .join(' | ');
+        });
+
+        console.log(`🛎️ Confirmation modal detected: "${modalText}"`);
+        console.log('🖱️ Clicking CONFIRM to proceed...');
+
+        // Scope the confirm button search INSIDE the visible dialog only —
+        // not the entire page. This avoids matching buttons in hidden dialogs.
+
+        const confirmButton = page.locator(
+            '[id*="ConfirmPayment"] input[type="submit"][value="CONFIRM"], ' +
+            '[id*="ConfirmPayment"] input[type="submit"][class*="background-primary"]'
+        ).first();
+
+        const isConfirmButtonVisible = await confirmButton.isVisible().catch(() => false);
+
+        if (isConfirmButtonVisible) {
+            await confirmButton.click();
+            console.log('✅ Confirmation modal confirmed.');
+
+        } else {
+            const fallBackConfirm = page.locator('input[type="submt"[value="CONFIRM"').first();
+            const isFallBackButtonVisible = await fallBackConfirm.isVisible().catch(() => false);
+
+            if (isFallBackButtonVisible) {
+                await fallBackConfirm.click();
+                console.log('✅ Confirmation modal confirmed via fallback.');
+            } else {
+                console.log('⚠️ Confirmation modal detected but no confirm button found - proceeding anyway....');
+            }
+        }
+
+    } catch {
+        console.log('🙅‍♂️ No confirmation modal detected. Proceeding to redirect scan...');
+    }
+
+}
+
 async function waitForButtonAndClick(page: Page, buttonSelectors: string[]): Promise<{ clicked: boolean; buttonText: string }> {
 
     const combinedSelectors = buttonSelectors.join(', ');
@@ -285,7 +549,11 @@ async function waitForButtonAndClick(page: Page, buttonSelectors: string[]): Pro
     return { clicked: false, buttonText: '' };
 }
 
-export async function checkoutInteraction(page: Page, errorKeywords: string[]): Promise<{ initialErrors: string[]; postInteractionErrors: string[]; interacted: boolean }> {
+export async function checkoutInteraction(
+    page: Page, 
+    errorKeywords: string[],
+    bankSelectionConfig?: BankSelectionConfig
+): Promise<{ initialErrors: string[]; postInteractionErrors: string[]; interacted: boolean }> {
 
     const redirectScanPromise = scanForRedirectedPages(page, errorKeywords);
 
@@ -359,8 +627,28 @@ export async function checkoutInteraction(page: Page, errorKeywords: string[]): 
 
         await handleCountdown(page);
 
+        void redirectScanPromise;
+        
+        //const freshRedirect = scanForRedirectedPages(page, errorKeywords);
+
+        await handleConfirmationModal(page);
+
+        if (bankSelectionConfig) {
+            try {
+                // Wait for the page to navigate away from the current checkout page
+                await page.waitForLoadState('networkidle', { timeout: 20000 });
+                console.log(`🏦 Navigated to: ${page.url()}`);
+            } catch {
+                console.log('⚠️ networkidle timeout waiting for bank selection page — proceeding anyway');
+            }
+
+            await handleBankSelection(page, bankSelectionConfig);
+        }
+
+        const freshRedirect = scanForRedirectedPages(page, errorKeywords);
+
         console.log('⏳ Scanning redirect chain for errors...');
-        const redirectResults = await redirectScanPromise;
+        const redirectResults = await freshRedirect;
 
         const postInteractionErrors = Array.from(
             new Set(
@@ -417,11 +705,31 @@ export async function checkoutInteraction(page: Page, errorKeywords: string[]): 
 
     await handleCountdown(page);
 
+    void redirectScanPromise
+
+    //const freshRedirect = scanForRedirectedPages(page, errorKeywords);
+
+    await handleConfirmationModal(page);
+
+    if (bankSelectionConfig) {
+        try {
+            // Wait for the page to navigate away from the current checkout page
+            await page.waitForLoadState('networkidle', { timeout: 20000 });
+            console.log(`🏦 Navigated to: ${page.url()}`);
+        } catch {
+            console.log('⚠️ networkidle timeout waiting for bank selection page — proceeding anyway');
+        }
+        
+        await handleBankSelection(page, bankSelectionConfig);
+    }
+
+    const freshRedirect = scanForRedirectedPages(page, errorKeywords);
+
     // STEP 5 — Wait for the redirect chain scanner to complete.
     // It will scan every page the browser lands on after the button click,
     // including intermediate error pages, and return errors per page.
     console.log('⏳ Scanning redirect chain for errors...');
-    const redirectResults = await redirectScanPromise;
+    const redirectResults = await freshRedirect;
 
     const postInteractionErrors = Array.from(
         new Set(
