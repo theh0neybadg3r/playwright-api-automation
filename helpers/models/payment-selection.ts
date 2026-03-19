@@ -169,36 +169,7 @@ export async function paymentSelectionInteraction(
         };
     }
 
-    const postInteractionErrors = await scanForRedirectedPages(page, errorKeywords);
+    const postInteractionErrors = (await scanForRedirectedPages(page, errorKeywords)).flatMap(r => r.errors);
 
     return { initialErrors, postInteractionErrors, interacted };
 }
-
-
-//   // ← Add this temporarily to see what's actually on the page
-        // await page.screenshot({ path: `debug-payment-method-page.png` });
-        // console.log('📸 Debug screenshot saved');
-
-        // // ← Add this after the screenshot line
-        // const allImages = await page.evaluate(() => {
-        //     return Array.from(document.querySelectorAll('img')).map(img => ({
-        //         src: img.src,
-        //         alt: img.alt,
-        //         className: img.className,
-        //     }));
-        // });
-        // console.log('🖼️ Images on page:', JSON.stringify(allImages, null, 2));
-
-        // const allLinks = await page.evaluate(() => {
-        //     return Array.from(document.querySelectorAll('a, button, [onclick], [class*="method"], [class*="option"], [class*="payment"]')).map(el => ({
-        //         tag: el.tagName,
-        //         className: el.className,
-        //         href: el.getAttribute('href'),
-        //         text: el.textContent?.trim().substring(0, 100),
-        //     }));
-        // });
-        // console.log('🔗 Clickable elements:', JSON.stringify(allLinks, null, 2));
-
-        // // ← Add this to see what text is actually visible on the page
-        // const pageText = await page.evaluate(() => document.body?.innerText ?? '');
-        // console.log('📄 Page text content:', pageText.substring(0, 500));

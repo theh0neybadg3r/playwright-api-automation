@@ -35,7 +35,7 @@ export const BODY_CUSTOMER = {
     "email": "emmanuelrevistatesting@gmail.com", 
     "first_name": "Emman", 
     "last_name": "Testing", 
-    "mobile": "+639083549944", 
+    "mobile": "+62819555831", 
     "state": "Manila", 
     "zip": "6786"    
 };

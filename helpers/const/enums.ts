@@ -17,7 +17,9 @@ export enum VENDOR {
     REBANQXPAY = 'RebanqxPay',
     SCHUBIKPAY = 'SchubikPay',
     AMB_PAY = 'AMB-Pay',
-    ORIENTAL_WALLET = 'Oriental Wallet'
+    ORIENTAL_WALLET = 'Oriental Wallet',
+    CRESTLUX = 'CrestLux',
+    DELTA_ASET = 'Delta-Aset'
 }
 
 export enum CASH_PAYMENT_VENDORS {

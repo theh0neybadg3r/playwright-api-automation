@@ -75,20 +75,107 @@ export const E_WALLET_SOLUTIONS = {
         currency: 'IDR',
         amount: 20000
     },
+
     LinkAja: {
         method: 'e_wallet',
         currency: 'IDR',
         amount: 20000
     },
+
     OVO: {
         method: 'e_wallet',
         currency: 'IDR',
         amount: 20000
     },
+
     ShopeePay: {
         method: 'e_wallet',
         currency: 'IDR',
         amount: 20000
+    },
+
+    CL_Dana: {
+        method: 'e_wallet',
+        solution:'dana',
+        currency: 'IDR',
+        amount: 20000
+    },
+
+    Momo: {
+        method: 'e_wallet',
+        solution: 'momo',
+        currency: 'VND',
+        amount: '2000000'
+    },
+
+    ViettelPay: {
+        method: 'e_wallet',
+        solution: 'viettelpay',
+        currency: 'VND',
+        amount: '2000000'
+    },
+
+    Zalo: {
+        method: 'e_wallet',
+        solution: 'zalo',
+        currency: 'VND',
+        amount: '2000000'
+    },
+
+    AMB_Pay_Dana: {
+        method: 'e_wallet',
+        solution: 'dana',
+        currency: 'IDR',
+        amount: '20000'
+    },
+
+    AMB_Pay_Linkaja: {
+        method: 'e_wallet',
+        solution: 'link_aja',
+        currency: 'IDR',
+        amount: '20000'
+    },
+
+    AMB_Pay_OVO: {
+        method: 'e_wallet',
+        solution: 'ovo',
+        currency: 'IDR',
+        amount: '20000'
+    },
+
+    AMB_Pay_Shopeepay_IDR: {
+        method: 'e_wallet',
+        solution: 'shopee_pay',
+        currency: 'IDR',
+        amount: '20000'
+    },
+
+    AMB_Pay_Boost: {
+        method: 'e_wallet',
+        solution: 'boost',
+        currency: 'MYR',
+        amount: '40'
+    },
+
+    AMB_Pay_GrabPay: {
+        method: 'e_wallet',
+        solution: 'grabpay',
+        currency: 'MYR',
+        amount: '40'
+    },
+
+    AMB_Pay_Shopeepay_MYR: {
+        method: 'e_wallet',
+        solution: 'shopee_pay',
+        currency: 'MYR',
+        amount: '40'
+    }, 
+
+    AMB_Pay_Touch_N_Go: {
+        method: 'e_wallet',
+        solution: 'touch_n_go',
+        currency: 'MYR',
+        amount: '40'
     }
     
 } as const;
@@ -149,14 +236,25 @@ export const PAYMENT_PROVIDER_SOLUTIONS = {
         amount: 110
     },
     QRIS: {
-        method: 'e_wallet',
+        method: 'payment_provider',
         currency: 'IDR',
         amount: 20000
     },
     QRPay: {
-        method: 'e_wallet',
+        method: 'payment_provider',
         currency: 'IDR',
         amount: 20000
+    },
+    CL_QRIS: {
+        method: 'payment_provider',
+        currency: 'IDR',
+        amount: 20000
+    },
+
+    AMB_PAY_DUITNOW_QR: {
+        method: 'payment_provider',
+        currency: 'MYR',
+        amount: 1200
     },
 } as const;
 

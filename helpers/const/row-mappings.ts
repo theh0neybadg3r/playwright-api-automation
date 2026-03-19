@@ -99,18 +99,102 @@ export const ROW_MAPPING: Record<string, Record<string, Record<string, number>>>
             "Checkout page load without errors": 73
         },
         "EPO Wallet|EPO Wallet": {
-            "Status code is 200 or 201": 64,
-            "No error message in response": 65,
-            "Success flag is true": 66,
-            "Checkout URL is present and valid": 67,
-            "Checkout page load without errors": 68
+            "Status code is 200 or 201": 74,
+            "No error message in response": 75,
+            "Success flag is true": 76,
+            "Checkout URL is present and valid": 77,
+            "Checkout page load without errors": 78
         },
         "Oriental Wallet|Oriental Wallet": {
-            "Status code is 200 or 201": 69,
-            "No error message in response": 70,
-            "Success flag is true": 71,
-            "Checkout URL is present and valid": 72,
-            "Checkout page load without errors": 73
+            "Status code is 200 or 201": 79,
+            "No error message in response": 80,
+            "Success flag is true": 81,
+            "Checkout URL is present and valid": 82,
+            "Checkout page load without errors": 83
+        },
+        "AMB-Pay|Boost": {
+            "Status code is 200 or 201": 84,
+            "No error message in response": 85,
+            "Success flag is true": 86,
+            "Checkout URL is present and valid": 87,
+            "Checkout page load without errors": 88
+        },
+        "AMB-Pay|DANA": {
+            "Status code is 200 or 201": 89,
+            "No error message in response": 90,
+            "Success flag is true": 91,
+            "Checkout URL is present and valid": 92,
+            "Checkout page load without errors": 93
+        },
+        "AMB-Pay|GrabPay": {
+            "Status code is 200 or 201": 94,
+            "No error message in response": 95,
+            "Success flag is true": 96,
+            "Checkout URL is present and valid": 97,
+            "Checkout page load without errors": 98
+        },
+        "AMB-Pay|LinkAja": {
+            "Status code is 200 or 201": 99,
+            "No error message in response": 100,
+            "Success flag is true": 101,
+            "Checkout URL is present and valid": 102,
+            "Checkout page load without errors": 103
+        },
+        "AMB-Pay|OVO": {
+            "Status code is 200 or 201": 104,
+            "No error message in response": 105,
+            "Success flag is true": 106,
+            "Checkout URL is present and valid": 107,
+            "Checkout page load without errors": 108
+        },
+        "AMB-Pay|Shopee Pay (IDR)": {
+            "Status code is 200 or 201": 109,
+            "No error message in response": 110,
+            "Success flag is true": 111,
+            "Checkout URL is present and valid": 112,
+            "Checkout page load without errors": 113
+        },
+        "AMB-Pay|Shopee Pay (MYR)": {
+            "Status code is 200 or 201": 114,
+            "No error message in response": 115,
+            "Success flag is true": 116,
+            "Checkout URL is present and valid": 117,
+            "Checkout page load without errors": 118
+        },
+        "AMB-Pay|Touch n Go": {
+            "Status code is 200 or 201": 119,
+            "No error message in response": 120,
+            "Success flag is true": 121,
+            "Checkout URL is present and valid": 122,
+            "Checkout page load without errors": 123
+        },
+        "Delta-Aset|Momo": {
+            "Status code is 200 or 201": 124,
+            "No error message in response": 125,
+            "Success flag is true": 126,
+            "Checkout URL is present and valid": 127,
+            "Checkout page load without errors": 128
+        },
+        "Delta-Aset|ViettelPay": {
+            "Status code is 200 or 201": 129,
+            "No error message in response": 130,
+            "Success flag is true": 131,
+            "Checkout URL is present and valid": 132,
+            "Checkout page load without errors": 133
+        },
+        "Delta-Aset|Zalo": {
+            "Status code is 200 or 201": 134,
+            "No error message in response": 135,
+            "Success flag is true": 136,
+            "Checkout URL is present and valid": 137,
+            "Checkout page load without errors": 138
+        },
+        "CrestLux|DANA": {
+            "Status code is 200 or 201": 139,
+            "No error message in response": 140,
+            "Success flag is true": 141,
+            "Checkout URL is present and valid": 142,
+            "Checkout page load without errors": 143
         }
     },
     "Online Banking": {
@@ -201,6 +285,13 @@ export const ROW_MAPPING: Record<string, Record<string, Record<string, number>>>
             "Success flag is true": 46,
             "Checkout URL is present and valid": 47,
             "Checkout page load without errors": 48
+        },
+        "CrestLux|QRIS": {
+            "Status code is 200 or 201": 49,
+            "No error message in response": 50,
+            "Success flag is true": 51,
+            "Checkout URL is present and valid": 52,
+            "Checkout page load without errors": 53
         }
     }
 }

@@ -609,6 +609,8 @@ export async function checkoutInteraction(
 
         const { clicked: buttonClicked } = await waitForButtonAndClick(page, buttonSelectors);
 
+        //await handleAcknowledgementModal(page);
+
         if (!buttonClicked) {
             console.log('ℹ️ No proceed/submit button found - Scanning for errors....');
 
@@ -631,7 +633,7 @@ export async function checkoutInteraction(
         
         //const freshRedirect = scanForRedirectedPages(page, errorKeywords);
 
-        await handleConfirmationModal(page);
+        //await handleConfirmationModal(page);
 
         if (bankSelectionConfig) {
             try {
@@ -671,16 +673,6 @@ export async function checkoutInteraction(
         // return { initialErrors, postInteractionErrors: [], interacted: false };
     }
 
-    // if (interacted) {
-    //     try {
-    //         await page.waitForLoadState('networkidle', { timeout: 15000 });
-    //         console.log('✅ Network idle after checkbox toggle. Button should be ready.');
-    //     } catch {
-    //         console.log('🚫 networkidle timeout after checkbox - proceeding anyway');
-    //     }
-
-    // }
-
     try {
         await page.waitForLoadState('networkidle', { timeout: 15000 });
         console.log('✅ Network idle after checkbox toggle. Button should be ready.');
@@ -692,6 +684,7 @@ export async function checkoutInteraction(
     // waitForButtonAndClick does NOT loop across redirects — it only acts on
     // the initial checkout page where the button should be present after checkbox toggle.
 
+    //await handleAcknowledgementModal(page);
     
     const { clicked: buttonClicked } = await waitForButtonAndClick(page, buttonSelectors);
 
@@ -876,3 +869,148 @@ export function CHECKOUT_INTERACTION_CHECKER(
     };
 }
 
+
+// // ---------------------------------------------------------------------------
+// // safeEvaluate
+// // Wraps page.evaluate with a hard timeout so JS-heavy pages (e.g. ViettelPay
+// // with live countdown timers) cannot block the Playwright command queue
+// // indefinitely. Returns a fallback value if the timeout is hit.
+// // ---------------------------------------------------------------------------
+
+// async function safeEvaluate<T>(
+//     page: Page,
+//     fn: () => T,
+//     fallback: T,
+//     timeoutMs = 5000
+// ): Promise<T> {
+//     return Promise.race([
+//         page.evaluate(fn).catch(() => fallback),
+//         new Promise<T>(resolve => setTimeout(() => resolve(fallback), timeoutMs))
+//     ]);
+// }
+
+// // ---------------------------------------------------------------------------
+// // safeIsVisible
+// // Wraps locator.isVisible() with a hard timeout.
+// // Without a timeout, isVisible() on a JS-heavy page can hang indefinitely
+// // waiting for the Playwright command to get a response from the page context.
+// // ---------------------------------------------------------------------------
+
+// // async function safeIsVisible(locator: { isVisible: () => Promise<boolean> }, timeoutMs = 3000): Promise<boolean> {
+// //     return Promise.race([
+// //         locator.isVisible().catch(() => false),
+// //         new Promise<boolean>(resolve => setTimeout(() => resolve(false), timeoutMs))
+// //     ]);
+// // }
+
+
+// async function handleAcknowledgementModal(page: Page): Promise<void> {
+
+//     const detectTimeout = 3000;
+
+//     try {
+
+//         // Strict selectors only — NO [class*="modal"], [class*="popup"], [class*="overlay"]
+//         // Those broad class selectors match permanent page layout elements on some checkout
+//         // pages (e.g. ViettelPay) causing false detection and a 10s wait for dismissal.
+//         await page.waitForFunction(() => {
+//             const dialogs = document.querySelectorAll('dialog, [role="dialog"], [role="alertdialog"]');
+//             return Array.from(dialogs).some(el => {
+//                 const style = window.getComputedStyle(el);
+//                 const rect  = el.getBoundingClientRect();
+//                 return (
+//                     style.display    !== 'none'   &&
+//                     style.visibility !== 'hidden' &&
+//                     style.opacity    !== '0'      &&
+//                     rect.width  > 0               &&
+//                     rect.height > 0
+//                 );
+//             });
+//         }, { timeout: detectTimeout });
+
+//         const modalText = await safeEvaluate(page, () => {
+//             const dialogs = document.querySelectorAll('dialog, [role="dialog"], [role="alertdialog"]');
+//             return Array.from(dialogs)
+//                 .filter(el => {
+//                     const style = window.getComputedStyle(el);
+//                     const rect  = el.getBoundingClientRect();
+//                     return (
+//                         style.display    !== 'none'   &&
+//                         style.visibility !== 'hidden' &&
+//                         style.opacity    !== '0'      &&
+//                         rect.width  > 0               &&
+//                         rect.height > 0
+//                     );
+//                 })
+//                 .map(el => (el.textContent ?? '').trim())
+//                 .filter(Boolean)
+//                 .join(' | ');
+//         }, '');
+
+//         console.log(`📋 Acknowledgement modal detected: "${modalText}"`);
+//         console.log('🖱️ Looking for dismiss/acknowledge button...');
+
+//         const dismissed = await safeEvaluate(page, () => {
+//             const dialogs = document.querySelectorAll('dialog, [role="dialog"], [role="alertdialog"]');
+//             const visibleDialog = Array.from(dialogs).find(el => {
+//                 const style = window.getComputedStyle(el);
+//                 const rect  = el.getBoundingClientRect();
+//                 return (
+//                     style.display    !== 'none'   &&
+//                     style.visibility !== 'hidden' &&
+//                     style.opacity    !== '0'      &&
+//                     rect.width  > 0               &&
+//                     rect.height > 0
+//                 );
+//             });
+
+//             if (!visibleDialog) return false;
+
+//             const buttons = Array.from(visibleDialog.querySelectorAll('button, input[type="button"], input[type="submit"], a[role="button"]'));
+
+//             const acknowledgeTexts = [
+//                 'ok', 'okay', 'got it', 'i understand', 'i agree',
+//                 'close', 'dismiss', 'continue', 'proceed',
+//                 'saya mengerti', 'mengerti', 'oke', 'ya', 'yes',
+//                 'accept', 'acknowledge'
+//             ];
+
+//             const ackButton = buttons.find(btn => {
+//                 const text = (btn.textContent ?? (btn as HTMLInputElement).value ?? '').toLowerCase().trim();
+//                 return acknowledgeTexts.some(t => text.includes(t));
+//             }) as HTMLElement | undefined;
+
+//             if (ackButton) { ackButton.click(); return true; }
+//             if (buttons.length === 1) { (buttons[0] as HTMLElement).click(); return true; }
+//             return false;
+//         }, false);
+
+//         if (dismissed) {
+//             console.log('✅ Acknowledgement modal dismissed.');
+//             try {
+//                 await page.waitForFunction(() => {
+//                     const dialogs = document.querySelectorAll('dialog, [role="dialog"], [role="alertdialog"]');
+//                     return !Array.from(dialogs).some(el => {
+//                         const style = window.getComputedStyle(el);
+//                         const rect  = el.getBoundingClientRect();
+//                         return (
+//                             style.display    !== 'none'   &&
+//                             style.visibility !== 'hidden' &&
+//                             style.opacity    !== '0'      &&
+//                             rect.width  > 0               &&
+//                             rect.height > 0
+//                         );
+//                     });
+//                 }, { timeout: 10000 });
+//                 console.log('✅ Modal fully dismissed. Proceeding to button search.');
+//             } catch {
+//                 console.log('⚠️ Modal may still be visible — proceeding anyway');
+//             }
+//         } else {
+//             console.log('⚠️ Acknowledgement modal found but no dismiss button matched — proceeding anyway');
+//         }
+
+//     } catch {
+//         console.log('ℹ️ No acknowledgement modal detected. Proceeding normally.');
+//     }
+// }
