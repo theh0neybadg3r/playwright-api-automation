@@ -1,11 +1,12 @@
-import { E_WALLET_SOLUTIONS, ONLINE_BANKING_SOLUTION, CASH_PAYMENT_SOLUTIONS, PAYMENT_PROVIDER_SOLUTIONS } from "./solutions";
+import { E_WALLET_SOLUTIONS, ONLINE_BANKING_SOLUTION, CASH_PAYMENT_SOLUTIONS, PAYMENT_PROVIDER_SOLUTIONS, LOCAL_BANK_TRANSFER_SOLUTIONS } from "./solutions";
 import { calculateSK } from "@utils/general";
 
 type PAYMENT_SOLUTIONS = 
     | typeof E_WALLET_SOLUTIONS[keyof typeof E_WALLET_SOLUTIONS]
     | typeof ONLINE_BANKING_SOLUTION[keyof typeof ONLINE_BANKING_SOLUTION]
     | typeof CASH_PAYMENT_SOLUTIONS[keyof typeof CASH_PAYMENT_SOLUTIONS]
-    | typeof PAYMENT_PROVIDER_SOLUTIONS[keyof typeof PAYMENT_PROVIDER_SOLUTIONS];
+    | typeof PAYMENT_PROVIDER_SOLUTIONS[keyof typeof PAYMENT_PROVIDER_SOLUTIONS]
+    | typeof LOCAL_BANK_TRANSFER_SOLUTIONS[keyof typeof LOCAL_BANK_TRANSFER_SOLUTIONS];
 
 
 interface DetailsParams {
@@ -13,6 +14,43 @@ interface DetailsParams {
     methodSolution: PAYMENT_SOLUTIONS;
     redirectURL?: string;
 }
+
+export const BODY_CUSTOMER_DEFAULT = {
+    "address_line_1": "123 Testing Street, Test Address One", 
+    "address_line_2": "456 Testing Address Two",
+    "city": "Manila", 
+    "country": "PH", 
+    "email": "emmantesting@yopmail.com", 
+    "first_name": "Emman", 
+    "last_name": "Testing", 
+    "mobile": "+639192244668", 
+    "state": "Manila", 
+    "zip": "6788"    
+};
+
+export const BODY_CUSTOMER_INDONESIA = {
+    ...BODY_CUSTOMER_DEFAULT,
+    country: "ID", 
+    mobile: "+62819555831",
+    state: "Jakarta", 
+    city: "Jakarta"
+}
+
+export const BODY_CUSTOMER_VIETNAM = {
+    ...BODY_CUSTOMER_DEFAULT,
+    country: "VN",
+    mobile: "+84912345678",
+    state: "Ho Chi Minh",
+    city: "Ho Chi Minh"
+};
+
+export const BODY_CUSTOMER_BANGLADESH = {
+    ...BODY_CUSTOMER_DEFAULT,
+    country: "BD",
+    mobile: "+8801712345678",
+    state: "Dhaka",
+    city: "Dhaka"
+};
 
 export const BODY_DETAILS_PARAMS = ({
     referenceID,
@@ -26,28 +64,6 @@ export const BODY_DETAILS_PARAMS = ({
         redirect_url: redirectURL
     };
 };
-
-export const BODY_CUSTOMER = {
-    "address_line_1": "38 Testing Street, Test Address One", 
-    "address_line_2": "110 Testing Address",
-    "city": "Test City", 
-    "country": "PH", 
-    "email": "emmanuelrevistatesting@gmail.com", 
-    "first_name": "Emman", 
-    "last_name": "Testing", 
-    "mobile": "+62819555831", 
-    "state": "Manila", 
-    "zip": "6786"    
-};
-
-type SolutionType = typeof E_WALLET_SOLUTIONS [keyof typeof E_WALLET_SOLUTIONS]
-export const BODY_DETAILS = (referenceID: string, methodSolution: SolutionType, amount: number) => ({
-    "reference_no": referenceID, 
-    ...methodSolution,
-    "currency": "PHP", 
-    "amount": amount,  
-    "redirect_url": "http://example.com"
-});
 
 export const ERROR_KEYWORDS = [
 
@@ -67,7 +83,8 @@ export const ERROR_KEYWORDS = [
     'palawan pawnshop transaction limit is up to php 20,000.00',
     'otc transaction limit is up to php 50,000.00',
     'Undefined array key "paymentUrl"',
-    'processing error'
+    'processing error',
+    'No active payment gateway'
 ];
 
 export const ERROR_INDICATORS = [

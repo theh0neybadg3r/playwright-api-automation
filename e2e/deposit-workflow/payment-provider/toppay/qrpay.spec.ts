@@ -4,7 +4,8 @@ import { test, expect } from '@playwright/test'
 import { apiResultLogger } from "@utils/general";
 import { PAYMENT_PROVIDER_SOLUTIONS } from "@const/solutions";
 import { ERROR_KEYWORDS } from "@const/constant-var";
-import { CHECKOUT_INTERACTION_CHECKER, CHECKOUT_PAGE_CHECKER, checkoutInteraction } from '@models/result-checker';
+import { CHECKOUT_INTERACTION_CHECKER, CHECKOUT_PAGE_CHECKER } from '@models/result-checker';
+import { checkoutInteraction } from '@models/checkout-page-checker';
 import { VENDOR, SHEET_NAME } from '@const/enums';
 import { DepositIntentRequest, DepositInterface } from '@models/deposit-intent';
 import { runCheckoutUrlChecker, runNoErrorChecker, runStatusCodeChecker, runSuccessFlagChecker } from '@models/api-deposit-checkers';

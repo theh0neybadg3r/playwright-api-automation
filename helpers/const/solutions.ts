@@ -258,15 +258,32 @@ export const PAYMENT_PROVIDER_SOLUTIONS = {
     },
 } as const;
 
+export const LOCAL_BANK_TRANSFER_SOLUTIONS = {
+
+    Local_Bank_Australia: {
+        method: 'local_bank_transfer',
+        currency: 'AUD',
+        amount: 100
+    },
+
+    CL_Local_Bank_Indonesia: {
+        method: 'local_bank_transfer',
+        currency: 'IDR',
+        amount: 20000
+    }
+} as const;
+
 export const ALL_PAYMENT_METHODS = {
     E_WALLET: E_WALLET_SOLUTIONS,
     ONLINE_BANKING: ONLINE_BANKING_SOLUTION,
     CASH_PAYMENT: CASH_PAYMENT_SOLUTIONS,
     PAYMENT_PROVIDER: PAYMENT_PROVIDER_SOLUTIONS,
+    LOCAL_BANK_TRANSFER: LOCAL_BANK_TRANSFER_SOLUTIONS
 } as const;
 
 export type PAYMENT_SOLUTIONS = 
     | typeof E_WALLET_SOLUTIONS[keyof typeof E_WALLET_SOLUTIONS]
     | typeof ONLINE_BANKING_SOLUTION[keyof typeof ONLINE_BANKING_SOLUTION]
     | typeof CASH_PAYMENT_SOLUTIONS[keyof typeof CASH_PAYMENT_SOLUTIONS]
-    | typeof PAYMENT_PROVIDER_SOLUTIONS[keyof typeof PAYMENT_PROVIDER_SOLUTIONS];
+    | typeof PAYMENT_PROVIDER_SOLUTIONS[keyof typeof PAYMENT_PROVIDER_SOLUTIONS]
+    | typeof LOCAL_BANK_TRANSFER_SOLUTIONS[keyof typeof LOCAL_BANK_TRANSFER_SOLUTIONS];

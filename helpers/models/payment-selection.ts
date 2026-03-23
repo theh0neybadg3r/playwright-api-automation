@@ -1,5 +1,5 @@
 import { Locator, Page } from "@playwright/test";
-import { scanForRedirectedPages, scanPageForErrors } from "./result-checker";
+import { scanForRedirectedPages, scanPageForErrors } from "./checkout-page-checker";
 
 async function clickAndWaitForRedirect(page: Page, locator: Locator, label: string): Promise<{ interacted: boolean; redirected: boolean }> {
 
@@ -169,7 +169,9 @@ export async function paymentSelectionInteraction(
         };
     }
 
-    const postInteractionErrors = (await scanForRedirectedPages(page, errorKeywords)).flatMap(r => r.errors);
+    const { promise } = scanForRedirectedPages(page, errorKeywords);
+    const redirectResults = await promise;
+    const postInteractionErrors = Array.from(new Set(redirectResults.flatMap(r => r.errors)));
 
     return { initialErrors, postInteractionErrors, interacted };
 }

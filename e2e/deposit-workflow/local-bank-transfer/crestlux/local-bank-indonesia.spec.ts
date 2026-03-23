@@ -2,30 +2,31 @@
 /* eslint-disable playwright/no-conditional-in-test */
 import { test, expect } from '@playwright/test'
 import { apiResultLogger } from "@utils/general";
-import { PAYMENT_PROVIDER_SOLUTIONS } from "@const/solutions";
-import { ERROR_KEYWORDS } from "@const/constant-var";
+import { LOCAL_BANK_TRANSFER_SOLUTIONS } from "@const/solutions";
+import { BODY_CUSTOMER_INDONESIA, ERROR_KEYWORDS } from "@const/constant-var";
 import { CHECKOUT_INTERACTION_CHECKER, CHECKOUT_PAGE_CHECKER } from '@models/result-checker';
 import { checkoutInteraction } from '@models/checkout-page-checker';
 import { VENDOR, SHEET_NAME } from '@const/enums';
 import { DepositIntentRequest, DepositInterface } from '@models/deposit-intent';
 import { runCheckoutUrlChecker, runNoErrorChecker, runStatusCodeChecker, runSuccessFlagChecker } from '@models/api-deposit-checkers';
 
-test.describe('AMB_PAY_DUITNOW_QR DEPOSIT WORKFLOW', () => {
+test.describe('REBANQXPAY_LBT_AUSTRALIA DEPOSIT WORKFLOW', () => {
 
     test.describe.configure({ mode: 'serial' });
 
-    let ambPay_Duitnow_QR_Solution: DepositInterface;
+    let lbtIndonesiaSolution: DepositInterface;
 
     test.beforeAll(async () => {
 
         // test.setTimeout(120000);
 
-        ambPay_Duitnow_QR_Solution = await DepositIntentRequest({ 
-            solutionConfig: PAYMENT_PROVIDER_SOLUTIONS.AMB_PAY_DUITNOW_QR,
+        lbtIndonesiaSolution = await DepositIntentRequest({ 
+            solutionConfig: LOCAL_BANK_TRANSFER_SOLUTIONS.CL_Local_Bank_Indonesia,
             apiKeys: {
-                publicKey: process.env.API_PUB_KEY_DEFAULT!,
-                secretKey: process.env.API_SECRET_KEY_DEFAULT!
-            }
+                publicKey: process.env.API_PUB_KEY_1!,
+                secretKey: process.env.API_SECRET_KEY_1!
+            },
+            bodyCustomer: BODY_CUSTOMER_INDONESIA
         });
     });
 
@@ -33,20 +34,20 @@ test.describe('AMB_PAY_DUITNOW_QR DEPOSIT WORKFLOW', () => {
 
         test.setTimeout(120000);
 
-        await runStatusCodeChecker(ambPay_Duitnow_QR_Solution, 'Duitnow QR', VENDOR.AMB_PAY, SHEET_NAME.PAYMENT_PROVIDER);
-        await runNoErrorChecker(ambPay_Duitnow_QR_Solution, 'Duitnow QR', VENDOR.AMB_PAY, SHEET_NAME.PAYMENT_PROVIDER);
-        await runSuccessFlagChecker(ambPay_Duitnow_QR_Solution, 'Duitnow QR', VENDOR.AMB_PAY, SHEET_NAME.PAYMENT_PROVIDER);
-        await runCheckoutUrlChecker(ambPay_Duitnow_QR_Solution, 'Duitnow QR', VENDOR.AMB_PAY, SHEET_NAME.PAYMENT_PROVIDER);
+        await runStatusCodeChecker(lbtIndonesiaSolution, 'Local Bank Indonesia', VENDOR.CRESTLUX, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runNoErrorChecker(lbtIndonesiaSolution, 'Local Bank Indonesia', VENDOR.CRESTLUX, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runSuccessFlagChecker(lbtIndonesiaSolution, 'Local Bank Indonesia', VENDOR.CRESTLUX, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runCheckoutUrlChecker(lbtIndonesiaSolution, 'Local Bank Indonesia', VENDOR.CRESTLUX, SHEET_NAME.LOCAL_BANK_TRANSFER);
 
         //Checker for checking if the checkout page load without error.
-        if (!ambPay_Duitnow_QR_Solution?.checkoutUrl) {
+        if (!lbtIndonesiaSolution?.checkoutUrl) {
             const failedResult = CHECKOUT_PAGE_CHECKER(
                 ['No checkout URL available'], 
                 0,
                 null,
-                'Duitnow QR',
-                VENDOR.AMB_PAY,
-                SHEET_NAME.PAYMENT_PROVIDER
+                'Local Bank Indonesia',
+                VENDOR.CRESTLUX,
+                SHEET_NAME.LOCAL_BANK_TRANSFER
             );
 
             console.log('📤 Logging test result (no checkout URL):', JSON.stringify(failedResult));
@@ -72,7 +73,7 @@ test.describe('AMB_PAY_DUITNOW_QR DEPOSIT WORKFLOW', () => {
                 }
             });
 
-            await page.goto(ambPay_Duitnow_QR_Solution.checkoutUrl, { waitUntil: 'load', timeout: 80000 });
+            await page.goto(lbtIndonesiaSolution.checkoutUrl, { waitUntil: 'load', timeout: 80000 });
             console.log('Redirected to:', page.url());
             await page.locator('body').waitFor({ state: 'visible', timeout: 10000 });
 
@@ -96,10 +97,10 @@ test.describe('AMB_PAY_DUITNOW_QR DEPOSIT WORKFLOW', () => {
                 postInteractionErrors, 
                 interacted, 
                 pageLoadTime,
-                ambPay_Duitnow_QR_Solution.checkoutUrl,
-                'Duitnow QR',
-                VENDOR.AMB_PAY,
-                SHEET_NAME.PAYMENT_PROVIDER
+                lbtIndonesiaSolution.checkoutUrl,
+                'Local Bank Indonesia',
+                VENDOR.CRESTLUX,
+                SHEET_NAME.LOCAL_BANK_TRANSFER
             );
 
             console.log('📤 Logging test result:', JSON.stringify(checkoutResult));

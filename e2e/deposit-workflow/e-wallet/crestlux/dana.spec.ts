@@ -3,12 +3,13 @@
 import { test, expect } from '@playwright/test'
 import { apiResultLogger } from "@utils/general";
 import { E_WALLET_SOLUTIONS } from "@const/solutions";
-import { ERROR_KEYWORDS } from "@const/constant-var";
+import { BODY_CUSTOMER_INDONESIA, ERROR_KEYWORDS } from "@const/constant-var";
 import { CHECKOUT_INTERACTION_CHECKER, CHECKOUT_PAGE_CHECKER } from '@models/result-checker';
+import { checkoutInteraction } from '@models/checkout-page-checker'
 import { VENDOR, SHEET_NAME } from '@const/enums';
 import { DepositIntentRequest, DepositInterface } from '@models/deposit-intent';
 import { runCheckoutUrlChecker, runNoErrorChecker, runStatusCodeChecker, runSuccessFlagChecker } from '@models/api-deposit-checkers';
-import { checkoutInteraction } from '@models/result-checker';
+
 
 test.describe('CRESTLUX_DANA DEPOSIT WORKFLOW', () => {
 
@@ -25,7 +26,8 @@ test.describe('CRESTLUX_DANA DEPOSIT WORKFLOW', () => {
             apiKeys: {
                 publicKey: process.env.API_PUB_KEY_2!,
                 secretKey: process.env.API_SECRET_KEY_2!
-            }
+            },
+            bodyCustomer: BODY_CUSTOMER_INDONESIA
         });
     });
 
@@ -76,8 +78,7 @@ test.describe('CRESTLUX_DANA DEPOSIT WORKFLOW', () => {
             console.log('Redirected to:', page.url());
             await page.locator('body').waitFor({ state: 'visible', timeout: 10000 });
 
-            const { initialErrors, postInteractionErrors, interacted } = await checkoutInteraction (page, ERROR_KEYWORDS);
-
+            const { initialErrors, postInteractionErrors, interacted } = await checkoutInteraction (page, ERROR_KEYWORDS, undefined, { selector: 'button:has-text("Saya Mengerti")' });
 
             //const foundErrorsInCheckoutPage = await scanPageForErrors(page, ERROR_KEYWORDS);
             const pageLoadTime = Date.now() - startTime;
