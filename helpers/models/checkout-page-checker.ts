@@ -1,3 +1,4 @@
+/* eslint-disable playwright/no-force-option */
 /* eslint-disable playwright/no-wait-for-timeout */
 /* eslint-disable playwright/no-networkidle */
 /* eslint-disable playwright/no-wait-for-selector */
@@ -18,6 +19,12 @@ export interface BankSelectionConfig {
 export interface AcknowledgementConfig {
     selector: string;      // exact locator of the dismiss button
     waitAfterMs?: number;  // optional wait after clicking, default 1000ms
+}
+export interface DepositFormConfig {
+    accountName: string;
+    accountNumber: string;
+    bankName: string;
+    birthdate?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -74,6 +81,340 @@ async function scanBodyPageErrors(page: Page, errorKeywords: string[]): Promise<
         return [];
     }
 
+}
+
+async function handleDepositForm(
+    page: Page,
+    config: DepositFormConfig,
+    errorKeywords: string[]
+): Promise<{ filled: boolean; postFormErrors: string[] }> {
+
+    try {
+
+        const fillFormExists = await page.locator('form').first().isVisible({ timeout: 3000 }).catch(() => false);
+
+        if (!fillFormExists) {
+            console.log('ℹ️ No deposit form detected on page - skipping form fill.')
+            return { filled: false, postFormErrors: [] };
+        }
+
+        console.log('📃 Deposit form detected. Filling form fields....');
+
+        // ── Account Number ────────────────────────────────────────────────────
+
+        const accountNumberSelectors = [
+            'input[name*="account_number" i]',
+            'input[placeholder*="account number" i]',
+            'input[id*="account_number" i]',
+            'input[id*="accountNumber" i]',
+            'input[name*="number" i]'
+        ];
+
+        let accountNumberToBeFilled = false;
+        for (const selector of accountNumberSelectors) {
+            const field = page.locator(selector).first();
+            const isVisible = await field.isVisible({ timeout: 2000 }).catch(() => false);
+            if (isVisible) {
+                await field.fill(config.accountNumber);
+                console.log(`✅ Account Number filled via: ${selector}`);
+                accountNumberToBeFilled = true;
+                break;
+            }
+        }
+
+        if (!accountNumberToBeFilled) console.log('⚠️ Account Number field not found - proceeding anyway....');
+
+        // ── Account Name ──────────────────────────────────────────────────────
+
+        const accountNameSelectors = [
+            'input[name*="account_name" i]',
+            'input[placeholder*="account name" i]',
+            'input[id*="account_name" i]',
+            'input[id*="accountName" i]',
+            'input[name*="name" i]'
+        ];
+
+        let accountNameToBeFilled = false;
+        for (const selector of accountNameSelectors) {
+            const field = page.locator(selector).first();
+            const isVisible = await field.isVisible({ timeout: 2000 }).catch(() => false);
+            if (isVisible) {
+                await field.fill(config.accountName);
+                console.log(`✅ Account Name filled via: ${selector}`);
+                accountNameToBeFilled = true;
+                break;
+            }
+        }
+
+        if (!accountNameToBeFilled) console.log('⚠️ Account Name field not found - proceeding anyway....');
+
+        // ── Bank dropdown ─────────────────────────────────────────────────────
+        // Try custom-styled dropdowns FIRST before native <select>.
+        // selectOption() only sets the hidden native value — custom components ignore it.
+
+        const customTriggerSelectors = [
+            '[class*="dropdown-toggle"]',
+            '[class*="select-trigger"]',
+            '[class*="select__control"]',       // react-select
+            '[class*="multiselect__select"]',   // vue-multiselect
+            '[aria-haspopup="listbox"]',
+            '[role="combobox"]',
+        ];
+
+        let bankIsSelected = false;
+
+        for (const triggerSel of customTriggerSelectors) {
+            const trigger = page.locator(triggerSel).first();
+            const isVisible = await trigger.isVisible({ timeout: 1500 }).catch(() => false);
+            if (!isVisible) continue;
+
+            await trigger.click();
+            console.log(`🔽 Custom dropdown opened via: ${triggerSel}`);
+
+            // Wait for the dropdown list to actually appear in the DOM before looking for options
+            try {
+                await page.waitForFunction(() => {
+                    const lists = document.querySelectorAll('[role="listbox"], [role="option"], ul[class*="option"], ul[class*="dropdown"]');
+                    return Array.from(lists).some(el => {
+                        const rect = el.getBoundingClientRect();
+                        return rect.width > 0 && rect.height > 0;
+                    });
+                }, { timeout: 3000 });
+                console.log('✅ Dropdown list is visible in DOM');
+            } catch {
+                console.log(`⚠️ Dropdown list did not appear after clicking ${triggerSel} — trying next trigger`);
+                continue;
+            }
+
+            // Try each option selector, check every candidate's text for exact match
+            const optionSelectors = [
+                `[role="option"]:has-text("${config.bankName}")`,
+                `[role="listbox"] li:has-text("${config.bankName}")`,
+                `ul[class*="option"] li:has-text("${config.bankName}")`,
+                `ul[class*="dropdown"] li:has-text("${config.bankName}")`,
+                `[class*="option"]:has-text("${config.bankName}")`,
+                `[class*="item"]:has-text("${config.bankName}")`,
+            ];
+
+            let optionClicked = false;
+            for (const optSel of optionSelectors) {
+                try {
+                    const options = page.locator(optSel);
+                    const count = await options.count();
+                    if (count === 0) continue;
+
+                    for (let i = 0; i < count; i++) {
+                        const opt = options.nth(i);
+                        const isVis = await opt.isVisible({ timeout: 1000 }).catch(() => false);
+                        if (!isVis) continue;
+
+                        const text = (await opt.innerText().catch(() => '')).trim();
+                        console.log(`👀 Found option candidate: "${text}" via ${optSel}`);
+
+                        if (text === config.bankName || text.includes(config.bankName)) {
+                            await opt.scrollIntoViewIfNeeded().catch(() => {});
+                            await opt.click({ force: true });
+                            console.log(`✅ Bank option clicked: "${text}"`);
+                            await page.waitForTimeout(600);
+                            optionClicked = true;
+                            break;
+                        }
+                    }
+
+                    if (optionClicked) break;
+                } catch {
+                    continue;
+                }
+            }
+
+            if (!optionClicked) {
+                console.log(`⚠️ Could not find option "${config.bankName}" in open dropdown — trying next trigger`);
+                await page.keyboard.press('Escape');
+                await page.waitForTimeout(300);
+                continue;
+            }
+
+            // Verify selection was committed by checking container textContent
+            const containerText = await trigger.evaluate(el => el.textContent ?? '').catch(() => '');
+            console.log(`🔍 Dropdown container text after selection: "${containerText.trim()}"`);
+
+            if (containerText.includes(config.bankName)) {
+                console.log(`✅ Bank selection confirmed in dropdown: "${config.bankName}"`);
+            } else {
+                console.log(`⚠️ Dropdown container does not show "${config.bankName}" — checking if placeholder is gone`);
+            }
+
+            // Final guard: wait for placeholder to disappear before allowing submit
+            try {
+                await page.waitForFunction((bankName: string) => {
+                    const placeholders = document.querySelectorAll(
+                        '[class*="placeholder"], [class*="select-placeholder"]'
+                    );
+                    const placeholderGone = Array.from(placeholders).every(el =>
+                        !(el.textContent ?? '').toLowerCase().includes('select a bank')
+                    );
+                    const triggers = document.querySelectorAll('[aria-haspopup="listbox"], [role="combobox"]');
+                    const bankVisible = Array.from(triggers).some(el =>
+                        (el.textContent ?? '').includes(bankName)
+                    );
+                    return placeholderGone || bankVisible;
+                }, config.bankName, { timeout: 3000 });
+                console.log('✅ Dropdown state committed — proceeding');
+            } catch {
+                console.log('⚠️ Could not confirm dropdown state commit — proceeding anyway');
+            }
+
+            bankIsSelected = true;
+            break;
+        }
+
+        // Fallback: native <select>
+        if (!bankIsSelected) {
+            const nativeDropdownSelectors = [
+                'select[name*="bank" i]',
+                'select[id*="bank" i]',
+                'select[name*="Bank" i]',
+                'select',
+            ];
+
+            for (const selector of nativeDropdownSelectors) {
+                const dropdown = page.locator(selector).first();
+                const isVisible = await dropdown.isVisible({ timeout: 2000 }).catch(() => false);
+                if (!isVisible) continue;
+
+                try {
+                    await dropdown.selectOption({ label: config.bankName });
+                    console.log(`✅ Bank selected by label on native dropdown: "${config.bankName}"`);
+                    bankIsSelected = true;
+                    break;
+                } catch {
+                    try {
+                        await dropdown.selectOption({ value: config.bankName });
+                        console.log(`✅ Bank selected by value on native dropdown: "${config.bankName}"`);
+                        bankIsSelected = true;
+                        break;
+                    } catch {
+                        console.log(`⚠️ Could not select bank "${config.bankName}" from ${selector}`);
+                    }
+                }
+            }
+        }
+
+        if (!bankIsSelected) console.log('⚠️ Bank dropdown not found or bank not selectable - proceeding anyway....');
+
+        // ── Birthdate (optional) ──────────────────────────────────────────────
+        // Only attempted if config.birthdate is provided.
+        // Accepts YYYY-MM-DD (native date input format) or MM/DD/YYYY.
+        // The native date input requires the value in YYYY-MM-DD regardless
+        // of how the placeholder displays it (mm/dd/yyyy).
+
+        if (config.birthdate) {
+
+            // Normalise to YYYY-MM-DD if caller passed MM/DD/YYYY
+            let normalizedDate = config.birthdate;
+            const mdyMatch = config.birthdate.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (mdyMatch) {
+                normalizedDate = `${mdyMatch[3]}-${mdyMatch[1]}-${mdyMatch[2]}`;
+            }
+
+            const birthdateSelectors = [
+                'input[type="date"]',
+                'input[name*="birth" i]',
+                'input[id*="birth" i]',
+                'input[placeholder*="birth" i]',
+                'input[placeholder*="mm/dd/yyyy" i]',
+            ];
+
+            let birthdateFilled = false;
+            for (const selector of birthdateSelectors) {
+                const field = page.locator(selector).first();
+                const isVisible = await field.isVisible({ timeout: 2000 }).catch(() => false);
+                if (!isVisible) continue;
+
+                // input[type="date"] requires fill() with YYYY-MM-DD
+                await field.fill(normalizedDate);
+                // Trigger change event so frameworks (React, Vue) pick up the new value
+                await field.dispatchEvent('change');
+                await field.dispatchEvent('input');
+
+                const filledValue = await field.inputValue().catch(() => '');
+                console.log(`✅ Birthdate filled via: ${selector} | Value set: "${filledValue}"`);
+                birthdateFilled = true;
+                break;
+            }
+
+            if (!birthdateFilled) console.log('⚠️ Birthdate field not found - proceeding anyway....');
+
+        } else {
+            console.log('ℹ️ No birthdate provided in config - skipping birthdate field.');
+        }
+
+        // ── Submit ────────────────────────────────────────────────────────────
+
+        const submitSelectors = [
+            'button[type="submit"]',
+            'input[type="submit"]',
+            'button:has-text("Submit")',
+            'button:has-text("SUBMIT")',
+            'input[value="Submit"]',
+            '[class*="submit"]',
+        ];
+
+        let submitted = false;
+        for (const selector of submitSelectors) {
+            const btn = page.locator(selector).first();
+            const isVisible = await btn.isVisible({ timeout: 2000 }).catch(() => false);
+            if (!isVisible) continue;
+
+            const btnText = await btn.innerText()
+                .catch(() => btn.getAttribute('value'))
+                .catch(() => 'N/A') as string;
+
+            await btn.click();
+            console.log(`✅ Form submitted via: "${btnText}"`);
+            submitted = true;
+            break;
+        }
+
+        if (!submitted) {
+            console.log('⚠️ Submit button not found — form may not have been submitted');
+            return { filled: true, postFormErrors: ['Submit button not found after form fill'] };
+        }
+
+        // ── Scan current page for errors before checking redirects ────────────
+        // Errors like "No active payment gateway" appear inline without any
+        // navigation, so framenavigated never fires and the redirect scanner
+        // misses them. Scan the live page here first.
+
+        await page.waitForTimeout(3000);
+
+        const samePageErrors = await scanBodyPageErrors(page, errorKeywords);
+        if (samePageErrors.length > 0) {
+            console.log(`❌ Error(s) found on current page after form submit:`, samePageErrors);
+            return { filled: true, postFormErrors: samePageErrors };
+        }
+
+        // ── Then scan the redirect chain ──────────────────────────────────────
+
+        console.log('⏱️ Scanning redirect chain after form submission....');
+        const { promise } = scanForRedirectedPages(page, errorKeywords);
+        const redirectResults = await promise;
+
+        const postFormErrors = Array.from(
+            new Set(redirectResults.flatMap(result => {
+                if (result.errors.length > 0) console.log(`⚠️ Errors sourced from [${result.sourceUrl}]:`, result.errors);
+                return result.errors;
+            }))
+        );
+
+        if (postFormErrors.length === 0) console.log('✅ No errors found after form submission redirect chain.');
+
+        return { filled: true, postFormErrors };
+
+    } catch (error) {
+        console.log('⚠️ handleDepositForm failed - proceeding anyway:', error.message);
+        return { filled: false, postFormErrors: [] };
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -605,7 +946,8 @@ export async function checkoutInteraction(
     page: Page,
     errorKeywords: string[],
     bankSelectionConfig?: BankSelectionConfig,
-    acknowledgementConfig?: AcknowledgementConfig
+    acknowledgementConfig?: AcknowledgementConfig,
+    depositFormConfig?: DepositFormConfig
 ): Promise<{ initialErrors: string[]; postInteractionErrors: string[]; interacted: boolean }> {
 
     const initialErrors = await scanPageForErrors(page, errorKeywords);
@@ -691,6 +1033,14 @@ export async function checkoutInteraction(
             await handleBankSelection(page, bankSelectionConfig);
         }
 
+        if (depositFormConfig) {
+            const { postFormErrors } = await handleDepositForm(page, depositFormConfig, errorKeywords);
+            if (postFormErrors.length > 0) {
+                return { initialErrors, postInteractionErrors: postFormErrors, interacted };
+            }
+            return { initialErrors, postInteractionErrors: [], interacted };
+        }
+
         // Start scanner ONLY NOW — after all interactions done
         console.log('⏳ Scanning redirect chain for errors...');
         const { promise } = scanForRedirectedPages(page, errorKeywords);
@@ -748,6 +1098,14 @@ export async function checkoutInteraction(
             console.log('⚠️ networkidle timeout waiting for bank selection page — proceeding anyway');
         }
         await handleBankSelection(page, bankSelectionConfig);
+    }
+
+    if (depositFormConfig) {
+        const { postFormErrors } = await handleDepositForm(page, depositFormConfig, errorKeywords);
+        if (postFormErrors.length > 0) {
+            return { initialErrors, postInteractionErrors: postFormErrors, interacted };
+        }
+        return { initialErrors, postInteractionErrors: [], interacted };
     }
 
     // Start scanner ONLY NOW — after all interactions done

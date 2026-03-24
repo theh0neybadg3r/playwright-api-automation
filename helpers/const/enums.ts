@@ -1,6 +1,6 @@
 export enum VENDOR {
     UPAY = 'Upay',
-    JPAY = 'Jpay',
+    JPAY = 'JPay',
     EPO_WALLET = 'EPO Wallet',
     PEARLPAY = 'PearlPay',
     TOPPAY = 'TopPay',

@@ -3,30 +3,30 @@
 import { test, expect } from '@playwright/test'
 import { apiResultLogger } from "@utils/general";
 import { LOCAL_BANK_TRANSFER_SOLUTIONS } from "@const/solutions";
-import { BODY_CUSTOMER_INDONESIA, ERROR_KEYWORDS } from "@const/constant-var";
+import { BODY_CUSTOMER_KOREA, ERROR_KEYWORDS } from "@const/constant-var";
 import { CHECKOUT_INTERACTION_CHECKER, CHECKOUT_PAGE_CHECKER } from '@models/result-checker';
 import { checkoutInteraction } from '@models/checkout-page-checker';
 import { VENDOR, SHEET_NAME } from '@const/enums';
 import { DepositIntentRequest, DepositInterface } from '@models/deposit-intent';
 import { runCheckoutUrlChecker, runNoErrorChecker, runStatusCodeChecker, runSuccessFlagChecker } from '@models/api-deposit-checkers';
 
-test.describe('CRESTLUX_LBT_INDONESIA DEPOSIT WORKFLOW', () => {
+test.describe('SCHUBIKPAY_FOREX DEPOSIT WORKFLOW', () => {
 
     test.describe.configure({ mode: 'serial' });
 
-    let lbtIndonesiaSolution: DepositInterface;
+    let schubikForexSolution: DepositInterface;
 
     test.beforeAll(async () => {
 
         // test.setTimeout(120000);
 
-        lbtIndonesiaSolution = await DepositIntentRequest({ 
-            solutionConfig: LOCAL_BANK_TRANSFER_SOLUTIONS.CL_Local_Bank_Indonesia,
+        schubikForexSolution = await DepositIntentRequest({ 
+            solutionConfig: LOCAL_BANK_TRANSFER_SOLUTIONS.SCHUBIK_Local_Bank_Korea,
             apiKeys: {
-                publicKey: process.env.API_PUB_KEY_1!,
-                secretKey: process.env.API_SECRET_KEY_1!
+                publicKey: process.env.API_PUB_KEY_DEFAULT!,
+                secretKey: process.env.API_SECRET_KEY_DEFAULT!
             },
-            bodyCustomer: BODY_CUSTOMER_INDONESIA
+            bodyCustomer: BODY_CUSTOMER_KOREA
         });
     });
 
@@ -34,19 +34,19 @@ test.describe('CRESTLUX_LBT_INDONESIA DEPOSIT WORKFLOW', () => {
 
         test.setTimeout(120000);
 
-        await runStatusCodeChecker(lbtIndonesiaSolution, 'Local Bank Indonesia', VENDOR.CRESTLUX, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runNoErrorChecker(lbtIndonesiaSolution, 'Local Bank Indonesia', VENDOR.CRESTLUX, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runSuccessFlagChecker(lbtIndonesiaSolution, 'Local Bank Indonesia', VENDOR.CRESTLUX, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runCheckoutUrlChecker(lbtIndonesiaSolution, 'Local Bank Indonesia', VENDOR.CRESTLUX, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runStatusCodeChecker(schubikForexSolution, 'Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runNoErrorChecker(schubikForexSolution, 'Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runSuccessFlagChecker(schubikForexSolution, 'Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runCheckoutUrlChecker(schubikForexSolution, 'Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
 
         //Checker for checking if the checkout page load without error.
-        if (!lbtIndonesiaSolution?.checkoutUrl) {
+        if (!schubikForexSolution?.checkoutUrl) {
             const failedResult = CHECKOUT_PAGE_CHECKER(
                 ['No checkout URL available'], 
                 0,
                 null,
-                'Local Bank Indonesia',
-                VENDOR.CRESTLUX,
+                'Local Bank Korea',
+                VENDOR.SCHUBIKPAY,
                 SHEET_NAME.LOCAL_BANK_TRANSFER
             );
 
@@ -73,7 +73,7 @@ test.describe('CRESTLUX_LBT_INDONESIA DEPOSIT WORKFLOW', () => {
                 }
             });
 
-            await page.goto(lbtIndonesiaSolution.checkoutUrl, { waitUntil: 'load', timeout: 80000 });
+            await page.goto(schubikForexSolution.checkoutUrl, { waitUntil: 'load', timeout: 80000 });
             console.log('Redirected to:', page.url());
             await page.locator('body').waitFor({ state: 'visible', timeout: 10000 });
 
@@ -84,7 +84,8 @@ test.describe('CRESTLUX_LBT_INDONESIA DEPOSIT WORKFLOW', () => {
                 {
                     accountName: 'Test Account',
                     accountNumber: '010224466881',
-                    bankName: 'CIMB'
+                    bankName: 'Industrial Bank of Korea',
+                    birthdate: '12/12/2000'
                 }
             );
 
@@ -106,9 +107,9 @@ test.describe('CRESTLUX_LBT_INDONESIA DEPOSIT WORKFLOW', () => {
                 postInteractionErrors, 
                 interacted, 
                 pageLoadTime,
-                lbtIndonesiaSolution.checkoutUrl,
-                'Local Bank Indonesia',
-                VENDOR.CRESTLUX,
+                schubikForexSolution.checkoutUrl,
+                'Local Bank Korea',
+                VENDOR.SCHUBIKPAY,
                 SHEET_NAME.LOCAL_BANK_TRANSFER
             );
 

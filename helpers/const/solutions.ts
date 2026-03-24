@@ -270,6 +270,19 @@ export const LOCAL_BANK_TRANSFER_SOLUTIONS = {
         method: 'local_bank_transfer',
         currency: 'IDR',
         amount: 20000
+    },
+
+    SCHUBIK_Local_Bank_Korea: {
+        method: 'local_bank_transfer',
+        currency: 'KRW',
+        amount: 10000
+    },
+
+    JPAY_Local_Bank_Japan: {
+        method: 'local_bank_transfer',
+        currency: 'JPY',
+        receiving_currency: 'JPY',
+        amount: 10000
     }
 } as const;
 

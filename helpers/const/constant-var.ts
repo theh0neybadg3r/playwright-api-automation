@@ -12,6 +12,7 @@ type PAYMENT_SOLUTIONS =
 interface DetailsParams {
     referenceID: string;
     methodSolution: PAYMENT_SOLUTIONS;
+    receiving_currency?: string;
     redirectURL?: string;
 }
 
@@ -50,6 +51,16 @@ export const BODY_CUSTOMER_BANGLADESH = {
     mobile: "+8801712345678",
     state: "Dhaka",
     city: "Dhaka"
+};
+
+export const BODY_CUSTOMER_KOREA = {
+    ...BODY_CUSTOMER_DEFAULT,
+    first_name: "엠만",
+    last_name: "테스트",
+    country: "KR",
+    mobile: "+821012345678",
+    state: "Seoul",
+    city: "Seoul"
 };
 
 export const BODY_DETAILS_PARAMS = ({
