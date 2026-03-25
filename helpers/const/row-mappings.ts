@@ -359,13 +359,20 @@ export const ROW_MAPPING: Record<string, Record<string, Record<string, number>>>
             "Checkout page load without errors": 48
         },
         "GritPay|Local Bank Korea": {
+            "Status code is 200 or 201": 49,
+            "No error message in response": 50,
+            "Success flag is true": 51,
+            "Checkout URL is present and valid": 52,
+            "Checkout page load without errors": 53
+        },
+        "SchubikPay|Forex_Local Bank Korea": {
             "Status code is 200 or 201": 54,
             "No error message in response": 55,
             "Success flag is true": 56,
             "Checkout URL is present and valid": 57,
             "Checkout page load without errors": 58
         },
-        "SchubikPay|Local Bank Korea": {
+        "SchubikPay|Gaming_Local Bank Korea": {
             "Status code is 200 or 201": 59,
             "No error message in response": 60,
             "Success flag is true": 61,

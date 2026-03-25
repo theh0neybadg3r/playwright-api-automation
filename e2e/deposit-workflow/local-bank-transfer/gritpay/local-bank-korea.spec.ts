@@ -10,21 +10,21 @@ import { VENDOR, SHEET_NAME } from '@const/enums';
 import { DepositIntentRequest, DepositInterface } from '@models/deposit-intent';
 import { runCheckoutUrlChecker, runNoErrorChecker, runStatusCodeChecker, runSuccessFlagChecker } from '@models/api-deposit-checkers';
 
-test.describe('SCHUBIKPAY_GAMING DEPOSIT WORKFLOW', () => {
+test.describe('GRITPAY_LOCAL_BANK_KOREA DEPOSIT WORKFLOW', () => {
 
     test.describe.configure({ mode: 'serial' });
 
-    let schubikGamingSolution: DepositInterface;
+    let gritpay_lbtKoreaSolution: DepositInterface;
 
     test.beforeAll(async () => {
 
         // test.setTimeout(120000);
 
-        schubikGamingSolution = await DepositIntentRequest({ 
+        gritpay_lbtKoreaSolution = await DepositIntentRequest({ 
             solutionConfig: LOCAL_BANK_TRANSFER_SOLUTIONS.Local_Bank_Korea,
             apiKeys: {
-                publicKey: process.env.API_PUB_KEY_1!,
-                secretKey: process.env.API_SECRET_KEY_1!
+                publicKey: process.env.API_PUB_KEY_2!,
+                secretKey: process.env.API_SECRET_KEY_2!
             },
             bodyCustomer: BODY_CUSTOMER_KOREA
         });
@@ -34,19 +34,19 @@ test.describe('SCHUBIKPAY_GAMING DEPOSIT WORKFLOW', () => {
 
         test.setTimeout(120000);
 
-        await runStatusCodeChecker(schubikGamingSolution, 'Gaming_Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runNoErrorChecker(schubikGamingSolution, 'Gaming_Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runSuccessFlagChecker(schubikGamingSolution, 'Gaming_Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runCheckoutUrlChecker(schubikGamingSolution, 'Gaming_Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runStatusCodeChecker(gritpay_lbtKoreaSolution, 'Local Bank Korea', VENDOR.GRITPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runNoErrorChecker(gritpay_lbtKoreaSolution, 'Local Bank Korea', VENDOR.GRITPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runSuccessFlagChecker(gritpay_lbtKoreaSolution, 'Local Bank Korea', VENDOR.GRITPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runCheckoutUrlChecker(gritpay_lbtKoreaSolution, 'Local Bank Korea', VENDOR.GRITPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
 
         //Checker for checking if the checkout page load without error.
-        if (!schubikGamingSolution?.checkoutUrl) {
+        if (!gritpay_lbtKoreaSolution?.checkoutUrl) {
             const failedResult = CHECKOUT_PAGE_CHECKER(
                 ['No checkout URL available'], 
                 0,
                 null,
-                'Gaming_Local Bank Korea',
-                VENDOR.SCHUBIKPAY,
+                'Local Bank Korea',
+                VENDOR.GRITPAY,
                 SHEET_NAME.LOCAL_BANK_TRANSFER
             );
 
@@ -73,7 +73,7 @@ test.describe('SCHUBIKPAY_GAMING DEPOSIT WORKFLOW', () => {
                 }
             });
 
-            await page.goto(schubikGamingSolution.checkoutUrl, { waitUntil: 'load', timeout: 80000 });
+            await page.goto(gritpay_lbtKoreaSolution.checkoutUrl, { waitUntil: 'load', timeout: 80000 });
             console.log('Redirected to:', page.url());
             await page.locator('body').waitFor({ state: 'visible', timeout: 10000 });
 
@@ -84,7 +84,7 @@ test.describe('SCHUBIKPAY_GAMING DEPOSIT WORKFLOW', () => {
                 {
                     accountName: 'Test Account',
                     accountNumber: '010224466881',
-                    bankName: 'Shinhan Bank',
+                    bankName: 'Industrial Bank of Korea',
                     birthdate: '12/12/2000'
                 }
             );
@@ -107,9 +107,9 @@ test.describe('SCHUBIKPAY_GAMING DEPOSIT WORKFLOW', () => {
                 postInteractionErrors, 
                 interacted, 
                 pageLoadTime,
-                schubikGamingSolution.checkoutUrl,
-                'Gaming_Local Bank Korea',
-                VENDOR.SCHUBIKPAY,
+                gritpay_lbtKoreaSolution.checkoutUrl,
+                'Local Bank Korea',
+                VENDOR.GRITPAY,
                 SHEET_NAME.LOCAL_BANK_TRANSFER
             );
 

@@ -37,12 +37,28 @@ export const BODY_CUSTOMER_INDONESIA = {
     city: "Jakarta"
 }
 
+export const BODY_CUSTOMER_THAILAND = {
+    ...BODY_CUSTOMER_DEFAULT,
+    country: "TH", 
+    mobile: "+66812345678",
+    state: "Bangkok", 
+    city: "Bangkok"
+}
+
 export const BODY_CUSTOMER_VIETNAM = {
     ...BODY_CUSTOMER_DEFAULT,
     country: "VN",
     mobile: "+84912345678",
     state: "Ho Chi Minh",
     city: "Ho Chi Minh"
+};
+
+export const BODY_CUSTOMER_MALAYSIA = {
+    ...BODY_CUSTOMER_DEFAULT,
+    country: "MY",
+    mobile: "+60122446688",
+    state: "Kuala Lumpur",
+    city: "Kuala Lumpur"
 };
 
 export const BODY_CUSTOMER_BANGLADESH = {
@@ -61,6 +77,14 @@ export const BODY_CUSTOMER_KOREA = {
     mobile: "+821012345678",
     state: "Seoul",
     city: "Seoul"
+};
+
+export const BODY_CUSTOMER_INDIA = {
+    ...BODY_CUSTOMER_DEFAULT,
+    country: "IN",
+    mobile: "+9984608518",
+    state: "Mumbai",
+    city: "Mumbai"
 };
 
 export const BODY_DETAILS_PARAMS = ({

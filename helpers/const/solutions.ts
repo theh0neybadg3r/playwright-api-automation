@@ -272,7 +272,7 @@ export const LOCAL_BANK_TRANSFER_SOLUTIONS = {
         amount: 20000
     },
 
-    SCHUBIK_Local_Bank_Korea: {
+    Local_Bank_Korea: {
         method: 'local_bank_transfer',
         currency: 'KRW',
         amount: 10000
@@ -282,6 +282,54 @@ export const LOCAL_BANK_TRANSFER_SOLUTIONS = {
         method: 'local_bank_transfer',
         currency: 'JPY',
         receiving_currency: 'JPY',
+        amount: 10000
+    },
+
+    TP_Local_Bank_Indonesia: {
+        method: 'local_bank_transfer',
+        currency: 'IDR',
+        amount: 15000
+    },
+
+    TP_Local_Bank_Thailand: {
+        method: 'local_bank_transfer',
+        currency: 'THB',
+        amount: 10000
+    },
+
+    AP_Local_Bank_Malaysia: {
+        method: 'local_bank_transfer',
+        currency: 'MYR',
+        amount: 10000
+    },
+
+    TR_Local_Bank_Thailand: {
+        method: 'local_bank_transfer',
+        currency: 'THB',
+        amount: 10000
+    },
+
+    TR_Local_Bank_India: {
+        method: 'local_bank_transfer',
+        currency: 'INR',
+        amount: 10000
+    },
+
+    TR_Local_Bank_Korea: {
+        method: 'local_bank_transfer',
+        currency: 'KRW',
+        amount: 10000
+    },
+
+    TR_Local_Bank_Malaysia: {
+        method: 'local_bank_transfer',
+        currency: 'MYR',
+        amount: 10000
+    },
+
+    TR_Local_Bank_Vietnam: {
+        method: 'local_bank_transfer',
+        currency: 'THB',
         amount: 10000
     }
 } as const;

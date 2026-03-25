@@ -29,17 +29,24 @@ export function NO_ERROR_RESPONSE_CHECKER(
     sheetName: SHEET_NAME
 ): TestResult {
 
-    const containsErrorMessage = !!(
-        apiResponseData.body?.error || apiResponseData.body?.success === false
-    );
+    const isNon2xx = apiResponseData.status < 200 || apiResponseData.status > 299;
+    const hasErrorField = !!(apiResponseData.body?.error);
+    const hasFailedSuccess = apiResponseData.body?.success === false;
+    const hasMessageOnError = isNon2xx && !!(apiResponseData.body?.message);
+
+    const containsErrorMessage = hasErrorField || hasFailedSuccess || hasMessageOnError;
+
+    const errorDetail = hasErrorField
+        ? JSON.stringify(apiResponseData.body?.error)
+        : hasMessageOnError
+            ? JSON.stringify(apiResponseData.body?.message)
+            : JSON.stringify(apiResponseData.body);
     return {
         vendor,
         solution: solutionName,
         testName: 'No error message in response',
         status: containsErrorMessage ? 'FAILED' : 'PASSED',
-        errorDetails: containsErrorMessage
-            ? JSON.stringify(apiResponseData.body?.error || apiResponseData.body)
-            : 'None',
+        errorDetails: containsErrorMessage ? errorDetail: 'None',
         remarks: containsErrorMessage ? 'Error in API Response' : 'Clean Response',
         sheetName
     };

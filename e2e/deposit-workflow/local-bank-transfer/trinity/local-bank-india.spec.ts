@@ -3,30 +3,30 @@
 import { test, expect } from '@playwright/test'
 import { apiResultLogger } from "@utils/general";
 import { LOCAL_BANK_TRANSFER_SOLUTIONS } from "@const/solutions";
-import { BODY_CUSTOMER_KOREA, ERROR_KEYWORDS } from "@const/constant-var";
+import { BODY_CUSTOMER_INDIA, ERROR_KEYWORDS } from "@const/constant-var";
 import { CHECKOUT_INTERACTION_CHECKER, CHECKOUT_PAGE_CHECKER } from '@models/result-checker';
 import { checkoutInteraction } from '@models/checkout-page-checker';
 import { VENDOR, SHEET_NAME } from '@const/enums';
 import { DepositIntentRequest, DepositInterface } from '@models/deposit-intent';
 import { runCheckoutUrlChecker, runNoErrorChecker, runStatusCodeChecker, runSuccessFlagChecker } from '@models/api-deposit-checkers';
 
-test.describe('SCHUBIKPAY_GAMING DEPOSIT WORKFLOW', () => {
+test.describe('TRINITY_LBT_INDIA DEPOSIT WORKFLOW', () => {
 
     test.describe.configure({ mode: 'serial' });
 
-    let schubikGamingSolution: DepositInterface;
+    let trinity_lbtIndiaSolution: DepositInterface;
 
     test.beforeAll(async () => {
 
         // test.setTimeout(120000);
 
-        schubikGamingSolution = await DepositIntentRequest({ 
-            solutionConfig: LOCAL_BANK_TRANSFER_SOLUTIONS.Local_Bank_Korea,
+        trinity_lbtIndiaSolution = await DepositIntentRequest({ 
+            solutionConfig: LOCAL_BANK_TRANSFER_SOLUTIONS.TR_Local_Bank_India,
             apiKeys: {
-                publicKey: process.env.API_PUB_KEY_1!,
-                secretKey: process.env.API_SECRET_KEY_1!
+                publicKey: process.env.API_PUB_KEY_3!,
+                secretKey: process.env.API_SECRET_KEY_3!
             },
-            bodyCustomer: BODY_CUSTOMER_KOREA
+            bodyCustomer: BODY_CUSTOMER_INDIA
         });
     });
 
@@ -34,19 +34,19 @@ test.describe('SCHUBIKPAY_GAMING DEPOSIT WORKFLOW', () => {
 
         test.setTimeout(120000);
 
-        await runStatusCodeChecker(schubikGamingSolution, 'Gaming_Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runNoErrorChecker(schubikGamingSolution, 'Gaming_Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runSuccessFlagChecker(schubikGamingSolution, 'Gaming_Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runCheckoutUrlChecker(schubikGamingSolution, 'Gaming_Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runStatusCodeChecker(trinity_lbtIndiaSolution, 'Local Bank India', VENDOR.TRINITY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runNoErrorChecker(trinity_lbtIndiaSolution, 'Local Bank India', VENDOR.TRINITY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runSuccessFlagChecker(trinity_lbtIndiaSolution, 'Local Bank India', VENDOR.TRINITY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runCheckoutUrlChecker(trinity_lbtIndiaSolution, 'Local Bank India', VENDOR.TRINITY, SHEET_NAME.LOCAL_BANK_TRANSFER);
 
         //Checker for checking if the checkout page load without error.
-        if (!schubikGamingSolution?.checkoutUrl) {
+        if (!trinity_lbtIndiaSolution?.checkoutUrl) {
             const failedResult = CHECKOUT_PAGE_CHECKER(
                 ['No checkout URL available'], 
                 0,
                 null,
-                'Gaming_Local Bank Korea',
-                VENDOR.SCHUBIKPAY,
+                'Local Bank India',
+                VENDOR.TRINITY,
                 SHEET_NAME.LOCAL_BANK_TRANSFER
             );
 
@@ -73,22 +73,11 @@ test.describe('SCHUBIKPAY_GAMING DEPOSIT WORKFLOW', () => {
                 }
             });
 
-            await page.goto(schubikGamingSolution.checkoutUrl, { waitUntil: 'load', timeout: 80000 });
+            await page.goto(trinity_lbtIndiaSolution.checkoutUrl, { waitUntil: 'load', timeout: 80000 });
             console.log('Redirected to:', page.url());
             await page.locator('body').waitFor({ state: 'visible', timeout: 10000 });
 
-            const { initialErrors, postInteractionErrors, interacted } = await checkoutInteraction(page, 
-                ERROR_KEYWORDS,
-                undefined, 
-                undefined,
-                {
-                    accountName: 'Test Account',
-                    accountNumber: '010224466881',
-                    bankName: 'Shinhan Bank',
-                    birthdate: '12/12/2000'
-                }
-            );
-
+            const { initialErrors, postInteractionErrors, interacted } = await checkoutInteraction(page, ERROR_KEYWORDS);
 
             //const foundErrorsInCheckoutPage = await scanPageForErrors(page, ERROR_KEYWORDS);
             const pageLoadTime = Date.now() - startTime;
@@ -107,9 +96,9 @@ test.describe('SCHUBIKPAY_GAMING DEPOSIT WORKFLOW', () => {
                 postInteractionErrors, 
                 interacted, 
                 pageLoadTime,
-                schubikGamingSolution.checkoutUrl,
-                'Gaming_Local Bank Korea',
-                VENDOR.SCHUBIKPAY,
+                trinity_lbtIndiaSolution.checkoutUrl,
+                'Local Bank India',
+                VENDOR.TRINITY,
                 SHEET_NAME.LOCAL_BANK_TRANSFER
             );
 

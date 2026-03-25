@@ -22,7 +22,7 @@ export interface AcknowledgementConfig {
 }
 export interface DepositFormConfig {
     accountName: string;
-    accountNumber: string;
+    accountNumber?: string;
     bankName: string;
     birthdate?: string;
 }
@@ -78,6 +78,178 @@ async function scanBodyPageErrors(page: Page, errorKeywords: string[]): Promise<
         return errorKeywords.filter(keyword => textInBody.includes(keyword.toLowerCase()));
     } catch (error) {
         console.log('scanBodyPageErrors failed:', error.message);
+        return [];
+    }
+}
+
+// ---------------------------------------------------------------------------
+// scanForAvailablePaymentMethods
+// Checks whether the checkout page has any visible payment method options.
+// Should ONLY be called when no other interactive or terminal content was found.
+// If none are found, logs FAILED and returns an error string.
+// ---------------------------------------------------------------------------
+
+async function scanForAvailablePaymentMethods(page: Page): Promise<string[]> {
+
+    try {
+        // ── Terminal content check ────────────────────────────────────────────
+        // If the page has a QR code, payment instructions, an amount display,
+        // or any other terminal content, it is a valid checkout page — not an
+        // empty solution. Only proceed to the availability check if none of
+        // these are present.
+
+        const terminalSelectors = [
+            // QR code
+            'canvas',
+            'img[src*="qr" i]',
+            'img[alt*="qr" i]',
+            '[class*="qr"]',
+            '[id*="qr"]',
+            'svg[class*="qr"]',
+            'svg[id*="qr"]',
+            '[class*="barcode"]',
+
+            // Payment instructions / info blocks
+            '[class*="instruction"]',
+            '[class*="payment-instruction"]',
+            '[class*="transfer-info"]',
+            '[class*="transfer"]',           // covers 振込 (bank transfer) pages
+            '[class*="bank-info"]',
+            '[class*="bank-detail"]',
+            '[class*="virtual-account"]',
+            '[class*="va-number"]',
+            '[class*="account-number"]',
+            '[class*="account-detail"]',
+
+            // Copy-to-clipboard buttons (VA / bank transfer pages)
+            '[class*="copy"]',
+
+            // Countdown / expiry
+            '[class*="countdown"]',
+            '[class*="timer"]',
+            '[class*="expir"]',
+
+            // Amount / total display
+            '[class*="amount"]',
+            '[class*="total"]',
+
+            // Data tables / info rows (like the 振込ID table in the screenshot)
+            'table',
+            'dl',                            // definition list — common for label:value layouts
+            '[class*="info-row"]',
+            '[class*="info-list"]',
+            '[class*="detail-row"]',
+            '[class*="detail-list"]',
+            '[class*="label"]',              // label:value pairs
+
+            // Payment provider logo on terminal pages
+            'img[src*="logo" i]',
+        ];
+
+        const combinedTerminalSelector = terminalSelectors.join(', ');
+
+        const hasTerminalContent = await page.evaluate(({ selectors, minLength }: { selectors: string; minLength: number }) => {
+
+            // Strategy 1: explicit empty content container check
+            // SmilePayz/TopPay empty pages always render a div with class "thailandContent"
+            // that is completely empty when no banks/solutions are configured.
+            const emptyContentDivs = document.querySelectorAll('[class*="thailandContent"], [class*="collapseContent"]');
+            for (const el of Array.from(emptyContentDivs)) {
+                if ((el.innerHTML ?? '').trim() === '') {
+                    return false; // empty container = no solutions available
+                }
+            }
+
+            // Strategy 2: selector match for known terminal content
+            const elements = document.querySelectorAll(selectors);
+            const selectorMatch = Array.from(elements).some(el => {
+                const style = window.getComputedStyle(el);
+                const rect = el.getBoundingClientRect();
+                return (
+                    style.display !== 'none' &&
+                    style.visibility !== 'hidden' &&
+                    style.opacity !== '0' &&
+                    rect.width > 0 &&
+                    rect.height > 0
+                );
+            });
+
+            if (selectorMatch) return true;
+
+            // Strategy 3: body text length threshold
+            const bodyText = document.body?.innerText?.trim() ?? '';
+            return bodyText.length > minLength;
+
+        }, { selectors: combinedTerminalSelector, minLength: 100 });
+
+        if (hasTerminalContent) {
+            console.log('✅ Terminal checkout content detected — skipping availability check.');
+            return [];
+        }
+
+        // ── Payment method availability check ────────────────────────────────
+        // Only reached when the page has no terminal content at all.
+
+        const paymentMethodSelectors = [
+            '[id*="payment-selection"] a',
+            '[class*="payment-option"]',
+            '[class*="payment-method"]',
+            '[class*="payment-item"]',
+            '[class*="bank-option"]',
+            '[class*="bank-item"]',
+            '[class*="method-item"]',
+            '[class*="method-option"]',
+            '[role="option"]',
+            '[role="listitem"]',
+            'ul[class*="payment"] li',
+            'ul[class*="bank"] li',
+            'a[href*="choosePayment"]',
+            '[id*="payment-selection"] a img',
+            '[class*="payment"] img',
+            '[class*="bank"] img',
+            '[class*="method"] img',
+            'a img[alt*="bank" i]',
+            'a img[alt*="pay" i]',
+            'a img[alt*="wallet" i]',
+        ];
+
+        const combinedSelector = paymentMethodSelectors.join(', ');
+
+        let hasOptions = false;
+        try {
+            await page.waitForSelector(combinedSelector, { state: 'visible', timeout: 5000 });
+            hasOptions = true;
+        } catch {
+            hasOptions = false;
+        }
+
+        if (!hasOptions) {
+            const visibleCount = await page.evaluate((selectors: string) => {
+                const elements = document.querySelectorAll(selectors);
+                return Array.from(elements).filter(el => {
+                    const style = window.getComputedStyle(el);
+                    const rect = el.getBoundingClientRect();
+                    return (
+                        style.display !== 'none' &&
+                        style.visibility !== 'hidden' &&
+                        style.opacity !== '0' &&
+                        rect.width > 0 &&
+                        rect.height > 0
+                    );
+                }).length;
+            }, combinedSelector);
+
+            if (visibleCount === 0) {
+                console.log('❌ FAILED: No banks/solutions available.');
+                return ['No banks/solutions available.'];
+            }
+        }
+
+        console.log('✅ Payment method options are available on checkout page.');
+        return [];
+
+    } catch (error) {
+        console.warn('⚠️ scanForAvailablePaymentMethods failed — proceeding anyway:', error.message);
         return [];
     }
 
@@ -985,7 +1157,6 @@ export async function checkoutInteraction(
         '[class*="submit"]',
         '[class*="summary"]',
         '[class*="proceed"]',
-        '[class*="pay"]',
         '[class*="confirm"]',
         '[class*="continue"]',
         '[class*="next"]',
@@ -1012,6 +1183,16 @@ export async function checkoutInteraction(
             // Terminal checkout page — QR code, payment instructions, etc.
             // No scanner needed — just return the scan result from above.
             console.log('ℹ️ No proceed/submit button found - terminal checkout page.');
+
+            // ---- Payment method availability check (last resort) ----
+            // Only runs when there's no checkbox, no button, no form —
+            // meaning the page should be showing selectable payment options.
+            // If it isn't, that's a genuine empty solution failure.
+            const availabilityErrors = await scanForAvailablePaymentMethods(page);
+            if (availabilityErrors.length > 0) {
+                return { initialErrors, postInteractionErrors: availabilityErrors, interacted: false };
+            }
+
             if (mainPageCheck.length > 0) {
                 console.log('❌ Errors found on main checkout page:', mainPageCheck);
             } else {

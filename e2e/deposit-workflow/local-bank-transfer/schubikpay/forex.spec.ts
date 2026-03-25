@@ -21,7 +21,7 @@ test.describe('SCHUBIKPAY_FOREX DEPOSIT WORKFLOW', () => {
         // test.setTimeout(120000);
 
         schubikForexSolution = await DepositIntentRequest({ 
-            solutionConfig: LOCAL_BANK_TRANSFER_SOLUTIONS.SCHUBIK_Local_Bank_Korea,
+            solutionConfig: LOCAL_BANK_TRANSFER_SOLUTIONS.Local_Bank_Korea,
             apiKeys: {
                 publicKey: process.env.API_PUB_KEY_DEFAULT!,
                 secretKey: process.env.API_SECRET_KEY_DEFAULT!
@@ -34,10 +34,10 @@ test.describe('SCHUBIKPAY_FOREX DEPOSIT WORKFLOW', () => {
 
         test.setTimeout(120000);
 
-        await runStatusCodeChecker(schubikForexSolution, 'Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runNoErrorChecker(schubikForexSolution, 'Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runSuccessFlagChecker(schubikForexSolution, 'Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runCheckoutUrlChecker(schubikForexSolution, 'Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runStatusCodeChecker(schubikForexSolution, 'Forex_Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runNoErrorChecker(schubikForexSolution, 'Forex_Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runSuccessFlagChecker(schubikForexSolution, 'Forex_Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runCheckoutUrlChecker(schubikForexSolution, 'Forex_Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
 
         //Checker for checking if the checkout page load without error.
         if (!schubikForexSolution?.checkoutUrl) {
@@ -45,7 +45,7 @@ test.describe('SCHUBIKPAY_FOREX DEPOSIT WORKFLOW', () => {
                 ['No checkout URL available'], 
                 0,
                 null,
-                'Local Bank Korea',
+                'Forex_Local Bank Korea',
                 VENDOR.SCHUBIKPAY,
                 SHEET_NAME.LOCAL_BANK_TRANSFER
             );
@@ -108,7 +108,7 @@ test.describe('SCHUBIKPAY_FOREX DEPOSIT WORKFLOW', () => {
                 interacted, 
                 pageLoadTime,
                 schubikForexSolution.checkoutUrl,
-                'Local Bank Korea',
+                'Forex_Local Bank Korea',
                 VENDOR.SCHUBIKPAY,
                 SHEET_NAME.LOCAL_BANK_TRANSFER
             );
