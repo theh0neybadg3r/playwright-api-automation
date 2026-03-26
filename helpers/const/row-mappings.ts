@@ -392,6 +392,13 @@ export const ROW_MAPPING: Record<string, Record<string, Record<string, number>>>
             "Success flag is true": 71,
             "Checkout URL is present and valid": 72,
             "Checkout page load without errors": 73
+        },
+        "HubPay|Local Bank Vietnam": {
+            "Status code is 200 or 201": 74,
+            "No error message in response": 75,
+            "Success flag is true": 76,
+            "Checkout URL is present and valid": 77,
+            "Checkout page load without errors": 78
         }
     }
 }

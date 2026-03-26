@@ -256,6 +256,12 @@ export const PAYMENT_PROVIDER_SOLUTIONS = {
         currency: 'MYR',
         amount: 1200
     },
+
+    TRINITY_DUITNOW_QR: {
+        method: 'payment_provider',
+        currency: 'MYR',
+        amount: 1200
+    },
 } as const;
 
 export const LOCAL_BANK_TRANSFER_SOLUTIONS = {
@@ -329,8 +335,14 @@ export const LOCAL_BANK_TRANSFER_SOLUTIONS = {
 
     TR_Local_Bank_Vietnam: {
         method: 'local_bank_transfer',
-        currency: 'THB',
-        amount: 10000
+        currency: 'VND',
+        amount: 100000
+    },
+
+    HP_Local_Bank_Vietnam: {
+        method: 'local_bank_transfer',
+        currency: 'VND',
+        amount: 20000
     }
 } as const;
 
