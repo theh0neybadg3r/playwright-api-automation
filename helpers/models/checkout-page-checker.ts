@@ -25,6 +25,7 @@ export interface DepositFormConfig {
     accountNumber?: string;
     bankName: string;
     birthdate?: string;
+    acknowledgementConfig?: AcknowledgementConfig;
 }
 
 // ---------------------------------------------------------------------------
@@ -258,7 +259,7 @@ async function scanForAvailablePaymentMethods(page: Page): Promise<string[]> {
 async function handleDepositForm(
     page: Page,
     config: DepositFormConfig,
-    errorKeywords: string[]
+    errorKeywords: string[],
 ): Promise<{ filled: boolean; postFormErrors: string[] }> {
 
     try {
@@ -564,6 +565,12 @@ async function handleDepositForm(
         if (samePageErrors.length > 0) {
             console.log(`❌ Error(s) found on current page after form submit:`, samePageErrors);
             return { filled: true, postFormErrors: samePageErrors };
+        }
+
+        // ── Check if there's an acknowledgement ──────────────────────────────────────
+
+        if (config.acknowledgementConfig) {
+            await handleAcknowledgementModal(page, config.acknowledgementConfig);
         }
 
         // ── Then scan the redirect chain ──────────────────────────────────────

@@ -84,7 +84,8 @@ test.describe('CRESTLUX_LBT_INDONESIA DEPOSIT WORKFLOW', () => {
                 {
                     accountName: 'Test Account',
                     accountNumber: '010224466881',
-                    bankName: 'CIMB'
+                    bankName: 'CIMB',
+                    acknowledgementConfig: { selector: 'button:has-text("Saya Mengerti")' }
                 }
             );
 
