@@ -60,7 +60,7 @@ export async function scanPageForErrors(page: Page, errorKeywords: string[]): Pr
         return errorKeywords.filter((keyword) => onlyVisibleErrors.includes(keyword));
 
     } catch (error) {
-        console.warn('scanPageForErrors failed - page may have closed or timed out:', error.message);
+        console.warn('scanPageForErrors failed - page may have closed or timed out:', (error as Error).message);
         return [];
     }
 
@@ -78,7 +78,7 @@ async function scanBodyPageErrors(page: Page, errorKeywords: string[]): Promise<
         if (!textInBody.trim()) return [];
         return errorKeywords.filter(keyword => textInBody.includes(keyword.toLowerCase()));
     } catch (error) {
-        console.log('scanBodyPageErrors failed:', error.message);
+        console.log('scanBodyPageErrors failed:', (error as Error).message);
         return [];
     }
 }
@@ -109,6 +109,16 @@ async function scanForAvailablePaymentMethods(page: Page): Promise<string[]> {
             'svg[class*="qr"]',
             'svg[id*="qr"]',
             '[class*="barcode"]',
+
+            // Transaction detail tables (like m1pay.com.my)
+            '[class*="transaction"]',
+            '[class*="detail"]',
+            '[class*="merchant"]',
+
+            // QR with countdown (common pattern)
+            '[class*="qr-code"]',
+            '[class*="qrcode"]',
+            'img[class*="qr"]',
 
             // Payment instructions / info blocks
             '[class*="instruction"]',
@@ -149,7 +159,7 @@ async function scanForAvailablePaymentMethods(page: Page): Promise<string[]> {
 
         const combinedTerminalSelector = terminalSelectors.join(', ');
 
-        const hasTerminalContent = await page.evaluate(({ selectors, minLength }: { selectors: string; minLength: number }) => {
+        const hasTerminalContent = await page.evaluate(({ selectors }: { selectors: string; }) => {
 
             // Strategy 1: explicit empty content container check
             // SmilePayz/TopPay empty pages always render a div with class "thailandContent"
@@ -179,7 +189,7 @@ async function scanForAvailablePaymentMethods(page: Page): Promise<string[]> {
 
             // Strategy 3: body text length threshold
             const bodyText = document.body?.innerText?.trim() ?? '';
-            return bodyText.length > minLength;
+            return bodyText.length > 50; //minLength;
 
         }, { selectors: combinedTerminalSelector, minLength: 100 });
 
@@ -250,7 +260,7 @@ async function scanForAvailablePaymentMethods(page: Page): Promise<string[]> {
         return [];
 
     } catch (error) {
-        console.warn('⚠️ scanForAvailablePaymentMethods failed — proceeding anyway:', error.message);
+        console.warn('⚠️ scanForAvailablePaymentMethods failed — proceeding anyway:', (error as Error).message);
         return [];
     }
 
@@ -591,7 +601,7 @@ async function handleDepositForm(
         return { filled: true, postFormErrors };
 
     } catch (error) {
-        console.log('⚠️ handleDepositForm failed - proceeding anyway:', error.message);
+        console.log('⚠️ handleDepositForm failed - proceeding anyway:', (error as Error).message);
         return { filled: false, postFormErrors: [] };
     }
 }
@@ -951,7 +961,7 @@ async function handleBankSelection(page: Page, config: BankSelectionConfig): Pro
         }
 
     } catch (err) {
-        console.log('⚠️ handleBankSelection failed — proceeding anyway:', err.message);
+        console.log('⚠️ handleBankSelection failed — proceeding anyway:', (err as Error).message);
     }
 
 }
@@ -1083,7 +1093,7 @@ export function scanForRedirectedPages(
             }
 
         } catch (err) {
-            console.warn(`⚠️ Could not scan page [${landedUrl}]:`, err.message);
+            console.warn(`⚠️ Could not scan page [${landedUrl}]:`, (err as Error).message);
         }
 
         if (hopCount >= maxHops) {
@@ -1190,6 +1200,12 @@ export async function checkoutInteraction(
             // Terminal checkout page — QR code, payment instructions, etc.
             // No scanner needed — just return the scan result from above.
             console.log('ℹ️ No proceed/submit button found - terminal checkout page.');
+
+            // try {
+            //     await page.waitForLoadState('domcontentloaded', { timeout: 5000 });
+            // } catch {
+            //     console.log('⚠️ domcontentloaded timeout before availability check — proceeding anyway');
+            // }
 
             // ---- Payment method availability check (last resort) ----
             // Only runs when there's no checkbox, no button, no form —

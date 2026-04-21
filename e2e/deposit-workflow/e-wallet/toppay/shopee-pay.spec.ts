@@ -84,7 +84,7 @@ test.describe('SHOPEE PAY DEPOSIT WORKFLOW', () => {
 
             if (initialErrors.length > 0 || postInteractionErrors.length > 0) {
                 console.log('Errors found - Initial:', initialErrors, '| Post-interaction:', postInteractionErrors);
-                await page.screenshot({ path: `error-logs/e-wallet/toppay/ovo/ovo-error.png` });
+                await page.screenshot({ path: `error-logs/e-wallet/toppay/shopee-pay/shopee-error.png` });
             }
 
             if (!interacted) {

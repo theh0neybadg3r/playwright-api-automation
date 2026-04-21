@@ -1,3 +1,4 @@
+/* eslint-disable playwright/no-networkidle */
 /* eslint-disable playwright/no-conditional-expect */
 /* eslint-disable playwright/no-conditional-in-test */
 import { test, expect } from '@playwright/test'
@@ -73,6 +74,11 @@ test.describe('AMB_PAY_SPay_MYR DEPOSIT WORKFLOW', () => {
             });
 
             await page.goto(amb_pay_SPay_MYR_Solution.checkoutUrl, { waitUntil: 'load', timeout: 80000 });
+
+            await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {
+                console.log('⚠️ networkidle timeout after redirect — proceeding with current page');
+            });
+            
             console.log('Redirected to:', page.url());
             await page.locator('body').waitFor({ state: 'visible', timeout: 10000 });
 
@@ -84,7 +90,7 @@ test.describe('AMB_PAY_SPay_MYR DEPOSIT WORKFLOW', () => {
 
             if (initialErrors.length > 0 || postInteractionErrors.length > 0) {
                 console.log('Errors found - Initial:', initialErrors, '| Post-interaction:', postInteractionErrors);
-                await page.screenshot({ path: `error-logs/e-wallet/toppay/dana/dana-error.png` });
+                await page.screenshot({ path: `error-logs/e-wallet/amb-pay/shopee-pay-myr/sp-myr-error.png` });
             }
 
             if (!interacted) {

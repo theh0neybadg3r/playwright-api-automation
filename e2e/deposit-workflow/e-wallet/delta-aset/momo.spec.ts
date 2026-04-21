@@ -86,7 +86,7 @@ test.describe('MOMO DEPOSIT WORKFLOW', () => {
 
             if (initialErrors.length > 0 || postInteractionErrors.length > 0) {
                 console.log('Errors found - Initial:', initialErrors, '| Post-interaction:', postInteractionErrors);
-                await page.screenshot({ path: `error-logs/e-wallet/toppay/dana/dana-error.png` });
+                await page.screenshot({ path: `error-logs/e-wallet/delta-aset/momo/momo-error.png` });
             }
 
             if (!interacted) {

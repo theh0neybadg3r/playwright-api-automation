@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "playwright test",
+    "test:live": "cross-env ENV=live playwright test",
     "pretest": "tsc --noEmit && eslint .",
     "ui": "playwright test --ui"
   },
@@ -20,5 +21,8 @@
     "eslint-plugin-playwright": "^2.7.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.0"
+  },
+  "dependencies": {
+    "cross-env": "^10.1.0"
   }
 }
