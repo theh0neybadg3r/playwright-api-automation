@@ -85,7 +85,7 @@ test.describe('GRABPAY DEPOSIT WORKFLOW', () => {
 
             if (initialErrors.length > 0 || postInteractionErrors.length > 0) {
                 console.log('Errors found - Initial:', initialErrors, '| Post-interaction:', postInteractionErrors);
-                await page.screenshot({ path: `error-logs/e-wallet/upay/gcash/upay-gcash-error.png` });
+                await page.screenshot({ path: `error-logs/e-wallet/upay/grabpay/grabpay-error.png` });
             }
 
             if (!interacted) {

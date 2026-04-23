@@ -3,6 +3,7 @@
 /* eslint-disable playwright/no-networkidle */
 /* eslint-disable playwright/no-wait-for-selector */
 import { Page } from '@playwright/test';
+import { URLSearchParams } from 'url';
 
 
 export interface RedirectScanResult {
@@ -571,6 +572,23 @@ async function handleDepositForm(
 
         await page.waitForTimeout(3000);
 
+        const currentUrl = page.url();
+        try{
+
+            const urlParams = new URLSearchParams(new URL(currentUrl).search);
+            const redirectStatus = urlParams.get('status');
+
+            if (redirectStatus === 'failed') {
+                console.log(`❌ Redirected directly to redirect URL with status=failed: ${currentUrl}`);
+                return {
+                    filled: true,
+                    postFormErrors: ['Redirect URL status displayed "failed". Check the API response to know more....']
+                };
+            } 
+        } catch {
+            console.log('⚠️ Could not parse current URL for failed redirect check - proceeding normally.');
+        }
+
         const samePageErrors = await scanBodyPageErrors(page, errorKeywords);
         if (samePageErrors.length > 0) {
             console.log(`❌ Error(s) found on current page after form submit:`, samePageErrors);
@@ -1117,6 +1135,26 @@ export function scanForRedirectedPages(
 
 }
 
+async function checkForFailedRedirect(page: Page): Promise<string[]> {
+
+    try {
+        const currUrl = page.url();
+        const urlParams = new URLSearchParams(new URL(currUrl).search);
+        const redirectStatus = urlParams.get('status');
+
+        if (redirectStatus === 'failed') {
+            console.log(`❌ Redirected directly to callbank URL with status=failed: ${currUrl}`);
+            return['Redirect URL status displayed "failed". Check the API response to know more....'];
+        }
+
+        return[];
+
+    } catch {
+        console.log('⚠️ Could not parse current URL for failed redirect check — proceeding normally');
+        return [];
+    }
+}
+
 // ---------------------------------------------------------------------------
 // checkoutInteraction
 // Main exported function. Covers all checkout flow variants:
@@ -1224,6 +1262,12 @@ export async function checkoutInteraction(
             return { initialErrors, postInteractionErrors: mainPageCheck, interacted };
         }
 
+        //Check if button click redirected straight to failed callback
+        const failedRedirectOfSolution = await checkForFailedRedirect(page);
+        if (failedRedirectOfSolution.length > 0) {
+            return { initialErrors, postInteractionErrors: failedRedirectOfSolution, interacted }
+        }
+
         await handleCountdown(page);
         await handleConfirmationModal(page);
 
@@ -1289,6 +1333,12 @@ export async function checkoutInteraction(
             console.log('✅ No errors found on checkout page.');
         }
         return { initialErrors, postInteractionErrors: pageErrors, interacted };
+    }
+
+    //Check if button click redirected straight to failed callback 
+    const failedRedirectOfSolution = await checkForFailedRedirect(page);
+    if (failedRedirectOfSolution.length > 0) {
+        return { initialErrors, postInteractionErrors: failedRedirectOfSolution, interacted }
     }
 
     await handleCountdown(page);

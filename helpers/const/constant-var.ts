@@ -32,7 +32,7 @@ export const BODY_CUSTOMER_DEFAULT = {
 export const BODY_CUSTOMER_INDONESIA = {
     ...BODY_CUSTOMER_DEFAULT,
     country: "ID", 
-    mobile: "+62819555831",
+    mobile: "+6281234567890", 
     state: "Jakarta", 
     city: "Jakarta"
 }
