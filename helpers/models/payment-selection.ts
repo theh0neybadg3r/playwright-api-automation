@@ -134,7 +134,7 @@ export async function paymentSelectionInteraction(
         }
 
     } catch (error) {
-        console.log(`paymentSelectionInteraction failed:`, error.message);
+        console.log(`paymentSelectionInteraction failed:`, (error as Error).message);
     }
 
     if (!interacted) {

@@ -82,7 +82,7 @@ export const BODY_CUSTOMER_KOREA = {
 export const BODY_CUSTOMER_INDIA = {
     ...BODY_CUSTOMER_DEFAULT,
     country: "IN",
-    mobile: "+9984608518",
+    mobile: "+919255580189",
     state: "Mumbai",
     city: "Mumbai"
 };

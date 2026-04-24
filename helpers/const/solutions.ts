@@ -324,7 +324,7 @@ export const LOCAL_BANK_TRANSFER_SOLUTIONS = {
     TR_Local_Bank_Korea: {
         method: 'local_bank_transfer',
         currency: 'KRW',
-        amount: 10000
+        amount: 100000
     },
 
     TR_Local_Bank_Malaysia: {
@@ -342,7 +342,7 @@ export const LOCAL_BANK_TRANSFER_SOLUTIONS = {
     HP_Local_Bank_Vietnam: {
         method: 'local_bank_transfer',
         currency: 'VND',
-        amount: 20000
+        amount: 100001
     }
 } as const;
 
