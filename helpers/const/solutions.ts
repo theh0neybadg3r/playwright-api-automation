@@ -342,7 +342,7 @@ export const LOCAL_BANK_TRANSFER_SOLUTIONS = {
     HP_Local_Bank_Vietnam: {
         method: 'local_bank_transfer',
         currency: 'VND',
-        amount: 100001
+        amount: 50000
     }
 } as const;
 

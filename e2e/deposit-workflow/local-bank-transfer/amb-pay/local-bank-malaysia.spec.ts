@@ -10,7 +10,7 @@ import { VENDOR, SHEET_NAME } from '@const/enums';
 import { DepositIntentRequest, DepositInterface } from '@models/deposit-intent';
 import { runCheckoutUrlChecker, runNoErrorChecker, runStatusCodeChecker, runSuccessFlagChecker } from '@models/api-deposit-checkers';
 
-test.describe('CRESTLUX_LBT_INDONESIA DEPOSIT WORKFLOW', () => {
+test.describe('AMB_PAY_LBT_MALAYSIA DEPOSIT WORKFLOW', () => {
 
     test.describe.configure({ mode: 'serial' });
 
