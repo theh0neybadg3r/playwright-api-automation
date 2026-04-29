@@ -2,32 +2,31 @@
 /* eslint-disable playwright/no-conditional-in-test */
 import { test, expect } from '@playwright/test'
 import { apiResultLogger } from "@utils/general";
-import { LOCAL_BANK_TRANSFER_SOLUTIONS } from "@const/solutions";
-import { BODY_CUSTOMER_KOREA, ERROR_KEYWORDS } from "@const/constant-var";
+import { E_WALLET_SOLUTIONS } from "@const/solutions";
+import { ERROR_KEYWORDS } from "@const/constant-var";
 import { CHECKOUT_INTERACTION_CHECKER, CHECKOUT_PAGE_CHECKER } from '@models/result-checker';
 import { checkoutInteraction } from '@models/checkout-page-checker';
 import { VENDOR, SHEET_NAME } from '@const/enums';
 import { DepositIntentRequest, DepositInterface } from '@models/deposit-intent';
 import { runCheckoutUrlChecker, runNoErrorChecker, runStatusCodeChecker, runSuccessFlagChecker } from '@models/api-deposit-checkers';
-//import { BODY_CUSTOMER_KOREA } from '@const/customer-body';
+//import { BODY_CUSTOMER_VIETNAM } from '@const/customer-body';
 
-test.describe('SCHUBIKPAY_FOREX DEPOSIT WORKFLOW', () => {
+test.describe('EPO_WALLET DEPOSIT WORKFLOW', () => {
 
     test.describe.configure({ mode: 'serial' });
 
-    let schubikForexSolution: DepositInterface;
+    let epoWalletSolution: DepositInterface;
 
     test.beforeAll(async () => {
 
         // test.setTimeout(120000);
 
-        schubikForexSolution = await DepositIntentRequest({ 
-            solutionConfig: LOCAL_BANK_TRANSFER_SOLUTIONS.Local_Bank_Korea,
+        epoWalletSolution = await DepositIntentRequest({ 
+            solutionConfig: E_WALLET_SOLUTIONS.EPO_Wallet,
             apiKeys: {
                 publicKey: process.env.API_PUB_KEY_DEFAULT!,
                 secretKey: process.env.API_SECRET_KEY_DEFAULT!
             },
-            bodyCustomer: BODY_CUSTOMER_KOREA
         });
     });
 
@@ -35,20 +34,20 @@ test.describe('SCHUBIKPAY_FOREX DEPOSIT WORKFLOW', () => {
 
         test.setTimeout(120000);
 
-        await runStatusCodeChecker(schubikForexSolution, 'Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runNoErrorChecker(schubikForexSolution, 'Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runSuccessFlagChecker(schubikForexSolution, 'Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
-        await runCheckoutUrlChecker(schubikForexSolution, 'Local Bank Korea', VENDOR.SCHUBIKPAY, SHEET_NAME.LOCAL_BANK_TRANSFER);
+        await runStatusCodeChecker(epoWalletSolution, 'EPO Wallet', VENDOR.EPO_WALLET, SHEET_NAME.E_WALLET);
+        await runNoErrorChecker(epoWalletSolution, 'EPO Wallet', VENDOR.EPO_WALLET, SHEET_NAME.E_WALLET);
+        await runSuccessFlagChecker(epoWalletSolution, 'EPO Wallet', VENDOR.EPO_WALLET, SHEET_NAME.E_WALLET);
+        await runCheckoutUrlChecker(epoWalletSolution, 'EPO Wallet', VENDOR.EPO_WALLET, SHEET_NAME.E_WALLET);
 
         //Checker for checking if the checkout page load without error.
-        if (!schubikForexSolution?.checkoutUrl) {
+        if (!epoWalletSolution?.checkoutUrl) {
             const failedResult = CHECKOUT_PAGE_CHECKER(
                 ['No checkout URL available'], 
                 0,
                 null,
-                'Local Bank Korea',
-                VENDOR.SCHUBIKPAY,
-                SHEET_NAME.LOCAL_BANK_TRANSFER
+                'EPO Wallet',
+                VENDOR.EPO_WALLET,
+                SHEET_NAME.E_WALLET
             );
 
             console.log('📤 Logging test result (no checkout URL):', JSON.stringify(failedResult));
@@ -74,29 +73,18 @@ test.describe('SCHUBIKPAY_FOREX DEPOSIT WORKFLOW', () => {
                 }
             });
 
-            await page.goto(schubikForexSolution.checkoutUrl, { waitUntil: 'load', timeout: 80000 });
+            await page.goto(epoWalletSolution.checkoutUrl, { waitUntil: 'load', timeout: 80000 });
             console.log('Redirected to:', page.url());
             await page.locator('body').waitFor({ state: 'visible', timeout: 10000 });
 
-            const { initialErrors, postInteractionErrors, interacted } = await checkoutInteraction(page, 
-                ERROR_KEYWORDS,
-                undefined, 
-                undefined,
-                {
-                    accountName: 'Test Account',
-                    accountNumber: '010224466881',
-                    bankName: 'Industrial Bank of Korea',
-                    birthdate: '12/12/2000'
-                }
-            );
-
+            const { initialErrors, postInteractionErrors, interacted } = await checkoutInteraction(page, ERROR_KEYWORDS);
 
             //const foundErrorsInCheckoutPage = await scanPageForErrors(page, ERROR_KEYWORDS);
             const pageLoadTime = Date.now() - startTime;
 
             if (initialErrors.length > 0 || postInteractionErrors.length > 0) {
                 console.log('Errors found - Initial:', initialErrors, '| Post-interaction:', postInteractionErrors);
-                await page.screenshot({ path: `error-logs/local-bank-transfer/schubik-pay/schubik-error.png` });
+                await page.screenshot({ path: `error-logs/e-wallet/toppay/dana/dana-error.png` });
             }
 
             if (!interacted) {
@@ -108,10 +96,10 @@ test.describe('SCHUBIKPAY_FOREX DEPOSIT WORKFLOW', () => {
                 postInteractionErrors, 
                 interacted, 
                 pageLoadTime,
-                schubikForexSolution.checkoutUrl,
-                'Local Bank Korea',
-                VENDOR.SCHUBIKPAY,
-                SHEET_NAME.LOCAL_BANK_TRANSFER
+                epoWalletSolution.checkoutUrl,
+                'EPO Wallet',
+                VENDOR.EPO_WALLET,
+                SHEET_NAME.E_WALLET
             );
 
             console.log('📤 Logging test result:', JSON.stringify(checkoutResult));

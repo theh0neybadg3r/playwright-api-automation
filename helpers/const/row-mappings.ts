@@ -365,40 +365,33 @@ export const ROW_MAPPING: Record<string, Record<string, Record<string, number>>>
             "Checkout URL is present and valid": 52,
             "Checkout page load without errors": 53
         },
-        "SchubikPay|Forex_Local Bank Korea": {
+        "SchubikPay|Local Bank Korea": {
             "Status code is 200 or 201": 54,
             "No error message in response": 55,
             "Success flag is true": 56,
             "Checkout URL is present and valid": 57,
             "Checkout page load without errors": 58
         },
-        "SchubikPay|Gaming_Local Bank Korea": {
+        "AMB-Pay|Local Bank Malaysia": {
             "Status code is 200 or 201": 59,
             "No error message in response": 60,
             "Success flag is true": 61,
             "Checkout URL is present and valid": 62,
             "Checkout page load without errors": 63
         },
-        "AMB-Pay|Local Bank Malaysia": {
+        "CrestLux|Local Bank Indonesia": {
             "Status code is 200 or 201": 64,
             "No error message in response": 65,
             "Success flag is true": 66,
             "Checkout URL is present and valid": 67,
             "Checkout page load without errors": 68
         },
-        "CrestLux|Local Bank Indonesia": {
+        "HubPay|Local Bank Vietnam": {
             "Status code is 200 or 201": 69,
             "No error message in response": 70,
             "Success flag is true": 71,
             "Checkout URL is present and valid": 72,
             "Checkout page load without errors": 73
-        },
-        "HubPay|Local Bank Vietnam": {
-            "Status code is 200 or 201": 74,
-            "No error message in response": 75,
-            "Success flag is true": 76,
-            "Checkout URL is present and valid": 77,
-            "Checkout page load without errors": 78
         }
     }
 }

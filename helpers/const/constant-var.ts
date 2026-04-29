@@ -87,6 +87,15 @@ export const BODY_CUSTOMER_INDIA = {
     city: "Mumbai"
 };
 
+export const BODY_CUSTOMER_BRAZIL = {
+    ...BODY_CUSTOMER_DEFAULT,
+    country: "BR",
+    mobile: "+5511991234567",
+    state: "Rio de Janeiro",
+    city: "Rio de Janeiro"
+};
+
+
 export const BODY_DETAILS_PARAMS = ({
     referenceID,
     methodSolution,

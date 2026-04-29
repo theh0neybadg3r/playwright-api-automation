@@ -245,6 +245,7 @@ export const PAYMENT_PROVIDER_SOLUTIONS = {
         currency: 'IDR',
         amount: 20000
     },
+
     CL_QRIS: {
         method: 'payment_provider',
         currency: 'IDR',
@@ -256,11 +257,26 @@ export const PAYMENT_PROVIDER_SOLUTIONS = {
         currency: 'MYR',
         amount: 1200
     },
+    AMB_PAY_QRIS: {
+        method: 'payment_provider',
+        currency: 'IDR',
+        amount: 20000
+    },
 
     TRINITY_DUITNOW_QR: {
         method: 'payment_provider',
         currency: 'MYR',
         amount: 1200
+    },
+    VietQR: {
+        method: 'payment_provider',
+        currency: 'VND',
+        amount: 2000000
+    },
+    Pix: {
+        method: 'payment_provider',
+        currency: 'BRL',
+        amount: 10
     },
 } as const;
 
@@ -307,6 +323,12 @@ export const LOCAL_BANK_TRANSFER_SOLUTIONS = {
         method: 'local_bank_transfer',
         currency: 'MYR',
         amount: 10000
+    },
+
+    AP_Local_Bank_Indonesia: {
+        method: 'local_bank_transfer',
+        currency: 'IDR',
+        amount: 20000
     },
 
     TR_Local_Bank_Thailand: {

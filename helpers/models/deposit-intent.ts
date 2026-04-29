@@ -2,8 +2,8 @@ import { expect, request as playwrightRequest } from '@playwright/test';
 import { ApiResponseData } from './types';
 import { referenceId, calculateSK } from '@utils/general';
 import { PAYMENT_SOLUTIONS } from '@const/solutions';
-import { HEADERS, BODY_DETAILS_PARAMS, ApiOverrides } from '@const/constant-var';
-import { BODY_CUSTOMER_DEFAULT } from '@const/customer-body';
+import { HEADERS, BODY_CUSTOMER_DEFAULT, BODY_DETAILS_PARAMS, ApiOverrides } from '@const/constant-var';
+//import { BODY_CUSTOMER_DEFAULT } from '@const/customer-body';
 
 export interface DepositInterface {
     checkoutUrl: string;

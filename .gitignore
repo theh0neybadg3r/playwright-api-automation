@@ -16,3 +16,7 @@ e2e/test.spec.ts
 
 #unnecessaries (for future use)
 code.md
+
+#reports
+allure-results/
+allure-report/

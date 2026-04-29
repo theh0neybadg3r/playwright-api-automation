@@ -19,7 +19,8 @@ export enum VENDOR {
     AMB_PAY = 'AMB-Pay',
     ORIENTAL_WALLET = 'Oriental Wallet',
     CRESTLUX = 'CrestLux',
-    DELTA_ASET = 'Delta-Aset'
+    DELTA_ASET = 'Delta-Aset',
+    EPSILON_LION = 'Epsilon-Lion'
 }
 
 export enum CASH_PAYMENT_VENDORS {
