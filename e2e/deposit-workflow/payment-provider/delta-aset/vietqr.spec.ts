@@ -35,10 +35,10 @@ test.describe('VIETQR DEPOSIT WORKFLOW', () => {
 
         test.setTimeout(120000);
 
-        await runStatusCodeChecker(vietQRSolution, 'Viet-QR', VENDOR.DELTA_ASET, SHEET_NAME.PAYMENT_PROVIDER);
-        await runNoErrorChecker(vietQRSolution, 'Viet-QR', VENDOR.DELTA_ASET, SHEET_NAME.PAYMENT_PROVIDER);
-        await runSuccessFlagChecker(vietQRSolution, 'Viet-QR', VENDOR.DELTA_ASET, SHEET_NAME.PAYMENT_PROVIDER);
-        await runCheckoutUrlChecker(vietQRSolution, 'Viet-QR', VENDOR.DELTA_ASET, SHEET_NAME.PAYMENT_PROVIDER);
+        await runStatusCodeChecker(vietQRSolution, 'VietQR', VENDOR.DELTA_ASET, SHEET_NAME.PAYMENT_PROVIDER);
+        await runNoErrorChecker(vietQRSolution, 'VietQR', VENDOR.DELTA_ASET, SHEET_NAME.PAYMENT_PROVIDER);
+        await runSuccessFlagChecker(vietQRSolution, 'VietQR', VENDOR.DELTA_ASET, SHEET_NAME.PAYMENT_PROVIDER);
+        await runCheckoutUrlChecker(vietQRSolution, 'VietQR', VENDOR.DELTA_ASET, SHEET_NAME.PAYMENT_PROVIDER);
 
         //Checker for checking if the checkout page load without error.
         if (!vietQRSolution?.checkoutUrl) {
@@ -46,7 +46,7 @@ test.describe('VIETQR DEPOSIT WORKFLOW', () => {
                 ['No checkout URL available'], 
                 0,
                 null,
-                'Viet-QR',
+                'VietQR',
                 VENDOR.DELTA_ASET,
                 SHEET_NAME.PAYMENT_PROVIDER
             );
@@ -99,7 +99,7 @@ test.describe('VIETQR DEPOSIT WORKFLOW', () => {
                 interacted, 
                 pageLoadTime,
                 vietQRSolution.checkoutUrl,
-                'Viet-QR',
+                'VietQR',
                 VENDOR.DELTA_ASET,
                 SHEET_NAME.PAYMENT_PROVIDER
             );

@@ -3,7 +3,7 @@
 import { test, expect } from '@playwright/test'
 import { apiResultLogger } from "@utils/general";
 import { PAYMENT_PROVIDER_SOLUTIONS } from "@const/solutions";
-import { BODY_CUSTOMER_THAILAND, ERROR_KEYWORDS } from "@const/constant-var";
+import { BODY_CUSTOMER_INDONESIA, ERROR_KEYWORDS } from "@const/constant-var";
 import { CHECKOUT_INTERACTION_CHECKER, CHECKOUT_PAGE_CHECKER } from '@models/result-checker';
 import { checkoutInteraction } from '@models/checkout-page-checker';
 import { VENDOR, SHEET_NAME } from '@const/enums';
@@ -26,7 +26,7 @@ test.describe('AMB_PAY_QRIS DEPOSIT WORKFLOW', () => {
                 publicKey: process.env.API_PUB_KEY_2!,
                 secretKey: process.env.API_SECRET_KEY_2!
             },
-            bodyCustomer: BODY_CUSTOMER_THAILAND
+            bodyCustomer: BODY_CUSTOMER_INDONESIA
         });
     });
 
